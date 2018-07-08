@@ -15,9 +15,12 @@
     "through2": "^2.0.3"
   },
   "scripts": {
-    "licenses": "licensee --error-only | tee licenses.log"
+    "licenses": "licensee --error-only | tee licenses.log",
+    "lint": "standard && standard-markdown"
   },
   "devDependencies": {
-    "licensee": "^4.5.0"
+    "licensee": "^4.5.0",
+    "standard": "^11.0.1",
+    "standard-markdown": "^4.0.2"
   }
 }
