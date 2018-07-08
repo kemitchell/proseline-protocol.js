@@ -16,7 +16,8 @@
   },
   "scripts": {
     "licenses": "licensee --error-only | tee licenses.log",
-    "lint": "standard && standard-markdown"
+    "lint": "standard && standard-markdown",
+    "test": "node test.js"
   },
   "devDependencies": {
     "licensee": "^4.5.0",
