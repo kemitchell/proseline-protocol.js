@@ -8,7 +8,7 @@ var sodium = require('sodium-universal')
 var through2 = require('through2')
 var verifySignature = require('./verify-signature')
 
-module.exports = Protocol
+module.exports = ReplicationProtocol
 
 // Message Validation
 
@@ -29,8 +29,10 @@ var validEnvelope = function (envelope) {
 var VERSION = 1
 var NONCE_LENGTH = 24
 
-function Protocol (secretKey) {
-  if (!(this instanceof Protocol)) return new Protocol(secretKey)
+function ReplicationProtocol (secretKey) {
+  if (!(this instanceof ReplicationProtocol)) {
+    return new ReplicationProtocol(secretKey)
+  }
 
   assert.equal(typeof secretKey, 'string')
 
@@ -92,7 +94,7 @@ function Protocol (secretKey) {
   Duplexify.call(self, self._writable, self._readable)
 }
 
-inherits(Protocol, Duplexify)
+inherits(ReplicationProtocol, Duplexify)
 
 // Message Type Prefixes
 var HANDSHAKE = 0
@@ -100,7 +102,7 @@ var OFFER = 1
 var REQUEST = 2
 var ENVELOPE = 3
 
-Protocol.prototype.handshake = function (callback) {
+ReplicationProtocol.prototype.handshake = function (callback) {
   var self = this
   if (self._sentNonce) return callback()
   debug('sending handshake')
@@ -114,25 +116,25 @@ Protocol.prototype.handshake = function (callback) {
   })
 }
 
-Protocol.prototype.offer = function (offer, callback) {
+ReplicationProtocol.prototype.offer = function (offer, callback) {
   assert(validLog(offer))
   debug('offering: %o', offer)
   this._encode(OFFER, offer, callback)
 }
 
-Protocol.prototype.request = function (request, callback) {
+ReplicationProtocol.prototype.request = function (request, callback) {
   assert(validLog(request))
   debug('requesting: %o', request)
   this._encode(REQUEST, request, callback)
 }
 
-Protocol.prototype.envelope = function (envelope, callback) {
+ReplicationProtocol.prototype.envelope = function (envelope, callback) {
   assert(validEnvelope(envelope))
   debug('sending envelope: %o', envelope)
   this._encode(ENVELOPE, envelope, callback)
 }
 
-Protocol.prototype.finalize = function (callback) {
+ReplicationProtocol.prototype.finalize = function (callback) {
   assert(typeof callback === 'function')
   var self = this
   self._finalize(function (error) {
@@ -145,12 +147,12 @@ Protocol.prototype.finalize = function (callback) {
   })
 }
 
-Protocol.prototype._encode = function (prefix, data, callback) {
+ReplicationProtocol.prototype._encode = function (prefix, data, callback) {
   var buffer = Buffer.from(JSON.stringify([prefix, data]), 'utf8')
   this._encoder.write(buffer, callback)
 }
 
-Protocol.prototype._parse = function (message, callback) {
+ReplicationProtocol.prototype._parse = function (message, callback) {
   try {
     var parsed = JSON.parse(message)
   } catch (error) {
