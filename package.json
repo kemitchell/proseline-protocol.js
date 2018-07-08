@@ -21,6 +21,7 @@
   "devDependencies": {
     "licensee": "^4.5.0",
     "standard": "^11.0.1",
-    "standard-markdown": "^4.0.2"
+    "standard-markdown": "^4.0.2",
+    "tape": "^4.9.1"
   }
 }

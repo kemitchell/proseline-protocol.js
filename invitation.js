@@ -11,32 +11,34 @@ module.exports = InvitationProtocol
 
 var ajv = new AJV()
 
-var validHandshake = ajv.compile({
+var VERSION = 1
+
+var validHandshake = ajv.compile(strictSchema({
   type: 'object',
   properties: {
     version: {type: 'number', multipleOf: 1, minimum: 1}
-  },
-  required: ['version'],
-  additionalProperties: false
-})
+  }
+}))
 
-var validInvitationData = ajv.compile({
+var validInvitationData = ajv.compile(strictSchema({
   type: 'object',
   properties: {
-    message: {
+    message: strictSchema({
       type: 'object',
       properties: {
         secretKey: {type: 'string', pattern: '^[a-f0-9]{64}$'}
-      },
-      required: ['secretKey'],
-      additionalProperties: false
-    },
+      }
+    }),
     publicKey: {type: 'string', pattern: '^[a-f0-9]{64}$'},
     signature: {type: 'string', pattern: '^[a-f0-9]{128}$'}
-  },
-  required: ['secretKey', 'mineOnly', 'publicKey', 'signature'],
-  additionalProperties: false
-})
+  }
+}))
+
+function strictSchema (schema) {
+  schema.required = Object.keys(schema.properties)
+  schema.additionalProperties = false
+  return schema
+}
 
 var validInvitation = function (envelope) {
   return validInvitationData(envelope) && verifySignature(envelope)
@@ -54,8 +56,6 @@ var validMessage = ajv.compile({
   additionalItems: false
 })
 
-var VERSION = 1
-
 function InvitationProtocol () {
   if (!(this instanceof InvitationProtocol)) {
     return new InvitationProtocol()
@@ -65,26 +65,27 @@ function InvitationProtocol () {
 
   // Readable: messages to our peer
   self._sentHandshake = false
-  self._writable = lengthPrefixedStream.encode()
+  self._encoder = lengthPrefixedStream.encode()
     .once('error', function (error) {
       self.destroy(error)
     })
 
   // Writable: messages from our peer
-  self._writable = lengthPrefixedStream.decode()
+  self._receivedHandshake = false
+  self._decoder = lengthPrefixedStream.decode()
   self._parser = through2.obj(function (chunk, _, done) {
     self._parse(chunk, function (error) {
       if (error) return done(error)
       done()
     })
   })
-  self._writable
+  self._decoder
     .pipe(self._parser)
     .once('error', function (error) {
       self.destroy(error)
     })
 
-  Duplexify.call(self, self._writable, self._writable)
+  Duplexify.call(self, self._decoder, self._encoder)
 }
 
 inherits(InvitationProtocol, Duplexify)
@@ -101,7 +102,11 @@ InvitationProtocol.prototype.handshake = function (callback) {
 }
 
 InvitationProtocol.prototype.invitation = function (invitation, callback) {
-  assert(validInvitation(invitation))
+  try {
+    assert(validInvitation(invitation))
+  } catch (error) {
+    return callback(error)
+  }
   debug('sending invitation: %o', invitation)
   this._encode(INVITATION, invitation, callback)
 }
@@ -111,13 +116,13 @@ InvitationProtocol.prototype.finalize = function (callback) {
   var self = this
   self._finalize(function (error) {
     if (error) return self.destroy(error)
-    self._writable.end(callback)
+    self._encoder.end(callback)
   })
 }
 
 InvitationProtocol.prototype._encode = function (prefix, data, callback) {
   var buffer = Buffer.from(JSON.stringify([prefix, data]), 'utf8')
-  this._writable.write(buffer, callback)
+  this._encoder.write(buffer, callback)
 }
 
 InvitationProtocol.prototype._parse = function (message, callback) {
@@ -137,7 +142,13 @@ InvitationProtocol.prototype._parse = function (message, callback) {
       debug('incompatible version: ' + body.version)
       return callback(new Error('incompatible version'))
     }
-  } else if (prefix === INVITATION && validInvitation(body)) {
+    this._receivedHandshake = true
+  } else if (!this._receivedHandshake) {
+    message = 'message before handshake'
+    debug(message)
+    return callback(new Error(message))
+  }
+  if (prefix === INVITATION && validInvitation(body)) {
     this.emit('invitation', body, callback) || callback()
   } else {
     debug('invalid message')
