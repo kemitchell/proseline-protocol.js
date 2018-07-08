@@ -36,6 +36,18 @@ function ReplicationProtocol (secretKey) {
   var self = this
   self._secretKeyBuffer = Buffer.from(secretKey, 'hex')
 
+  // On Stream Encryption:
+  //
+  // Peers join projects by exchanging secret encryption keys.
+  // Each peer hashes the encryption key to derive a discovery
+  // key.  Peer use discovery keys to discover peers and broadcast
+  // their interest in data for the project.  All replication data
+  // for project is encrypted with the secret key.
+  //
+  // As a result, all peers can see discovery keys, but only
+  // peers who know the secret key for a given discovery key can
+  // send and receive data for the corresponding project.
+
   // Readable: messages to our peer
 
   // Cryptographic stream using our nonce and the secret key.
