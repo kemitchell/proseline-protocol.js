@@ -13,22 +13,7 @@
           "minimum": 0
         },
         "body": {
-          "type": "object",
-          "properties": {
-            "type": {
-              "type": "string",
-              "enum": [
-                "draft",
-                "intro",
-                "mark",
-                "note"
-              ]
-            }
-          },
-          "required": [
-            "type"
-          ],
-          "additionalProperties": true
+          "type": "object"
         }
       },
       "required": [
