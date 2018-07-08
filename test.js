@@ -4,22 +4,20 @@ var stringify = require('fast-json-stable-stringify')
 var tape = require('tape')
 
 tape('invitation', function (suite) {
-  suite.test('basic', function (test) {
+  suite.test('send and receive invitation', function (test) {
     var a = new protocol.Invitation()
     var b = new protocol.Invitation()
     a.pipe(b).pipe(a)
-    var aPublicKey = Buffer.alloc(sodium.crypto_sign_PUBLICKEYBYTES)
-    var aSecretKey = Buffer.alloc(sodium.crypto_sign_SECRETKEYBYTES)
-    sodium.crypto_sign_keypair(aPublicKey, aSecretKey)
+    var keys = makeKeyPair()
     var invitation = {
       message: {secretKey: 'a'.repeat(64)},
-      publicKey: aPublicKey.toString('hex')
+      publicKey: keys.publicKey.toString('hex')
     }
     var signature = Buffer.alloc(sodium.crypto_sign_BYTES)
     sodium.crypto_sign_detached(
       signature,
       Buffer.from(stringify(invitation.message), 'utf8'),
-      aSecretKey
+      keys.secretKey
     )
     invitation.signature = signature.toString('hex')
     a.handshake(function (error) {
@@ -37,3 +35,35 @@ tape('invitation', function (suite) {
     })
   })
 })
+
+tape('replication', function (suite) {
+  suite.test('send and receive offer', function (test) {
+    var secretKey = Buffer.alloc(64)
+    sodium.randombytes_buf(secretKey)
+    var secretKeyHex = secretKey.toString('hex')
+    var a = protocol.Replication(secretKeyHex)
+    var b = protocol.Replication(secretKeyHex)
+    a.pipe(b).pipe(a)
+    a.handshake(function (error) {
+      test.ifError(error, 'no a.handshake error')
+      b.handshake(function (error) {
+        test.ifError(error, 'no b.handshake error')
+        var offer = {publicKey: 'a'.repeat(64), index: 10}
+        b.once('offer', function (received) {
+          test.deepEqual(received, offer, 'receives offer')
+          test.end()
+        })
+        a.offer(offer, function (error) {
+          test.ifError(error, 'no a.offer error')
+        })
+      })
+    })
+  })
+})
+
+function makeKeyPair () {
+  var publicKey = Buffer.alloc(sodium.crypto_sign_PUBLICKEYBYTES)
+  var secretKey = Buffer.alloc(sodium.crypto_sign_SECRETKEYBYTES)
+  sodium.crypto_sign_keypair(publicKey, secretKey)
+  return {publicKey, secretKey}
+}
