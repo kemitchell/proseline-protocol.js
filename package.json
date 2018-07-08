@@ -24,7 +24,7 @@
     "protocols"
   ],
   "license": "SEE LICENSE IN LICENSE",
-  "repository": "kemitchell/proseline-protocol.js",
+  "repository": "proseline/proseline-protocol.js",
   "scripts": {
     "licenses": "licensee --errors-only | tee licenses.log",
     "lint": "standard && standard-markdown",
