@@ -26,7 +26,7 @@
   "license": "SEE LICENSE IN LICENSE",
   "repository": "proseline/proseline-protocol.js",
   "scripts": {
-    "licenses": "licensee --errors-only | tee licenses.log",
+    "licenses": "licensee --errors-only",
     "lint": "standard && standard-markdown",
     "test": "node test.js"
   }
