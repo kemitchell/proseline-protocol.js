@@ -18,6 +18,11 @@
     "standard-markdown": "^4.0.2",
     "tape": "^4.9.1"
   },
+  "keywords": [
+    "peer-to-peer",
+    "proseline",
+    "protocols"
+  ],
   "license": "SEE LICENSE IN LICENSE",
   "repository": "kemitchell/proseline-protocol.js",
   "scripts": {
