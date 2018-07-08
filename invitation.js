@@ -7,11 +7,13 @@ var lengthPrefixedStream = require('length-prefixed-stream')
 var through2 = require('through2')
 var verifySignature = require('./verify-signature')
 
+// Stream implementation of Proseline's protocol for exchanging
+// project invitations.
 module.exports = InvitationProtocol
 
 var ajv = new AJV()
 
-var VERSION = 1
+var PROTOCOL_VERSION = 1
 
 var validHandshake = ajv.compile(strictSchema({
   type: 'object',
@@ -20,6 +22,7 @@ var validHandshake = ajv.compile(strictSchema({
   }
 }))
 
+// An invitation is a signed copy of the secret key for a project.
 var validInvitationData = ajv.compile(strictSchema({
   type: 'object',
   properties: {
@@ -34,6 +37,8 @@ var validInvitationData = ajv.compile(strictSchema({
   }
 }))
 
+// Helper function for building JSON schemas for objects that must
+// contain exactly the specified properties.
 function strictSchema (schema) {
   schema.required = Object.keys(schema.properties)
   schema.additionalProperties = false
@@ -44,9 +49,11 @@ var validInvitation = function (envelope) {
   return validInvitationData(envelope) && verifySignature(envelope)
 }
 
+// Message Type Prefixes
 var HANDSHAKE = 0
 var INVITATION = 1
 
+// Messages are sent as JSON-encoded [prefix, body] tuples.
 var validMessage = ajv.compile({
   type: 'array',
   items: [
@@ -94,7 +101,7 @@ InvitationProtocol.prototype.handshake = function (callback) {
   var self = this
   if (self._sentHandshake) return callback()
   debug('sending handshake')
-  self._encode(HANDSHAKE, {version: VERSION}, function (error) {
+  self._encode(HANDSHAKE, {version: PROTOCOL_VERSION}, function (error) {
     if (error) return callback(error)
     self._sentHandshake = true
     callback()
@@ -138,7 +145,7 @@ InvitationProtocol.prototype._parse = function (message, callback) {
   var prefix = parsed[0]
   var body = parsed[1]
   if (prefix === HANDSHAKE && validHandshake(body)) {
-    if (body.version !== VERSION) {
+    if (body.version !== PROTOCOL_VERSION) {
       debug('incompatible version: ' + body.version)
       return callback(new Error('incompatible version'))
     }

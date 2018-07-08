@@ -8,14 +8,12 @@ var sodium = require('sodium-universal')
 var through2 = require('through2')
 var verifySignature = require('./verify-signature')
 
+// Stream implementation of Proseline's protocol for replicating
+// project data.
 module.exports = ReplicationProtocol
 
 // Message Validation
-
 var ajv = new AJV()
-
-// Message Types
-
 var validHandshake = ajv.compile(require('./schemas/handshake'))
 var validLog = ajv.compile(require('./schemas/log'))
 var validTuple = ajv.compile(require('./schemas/tuple'))
@@ -25,16 +23,15 @@ var validEnvelope = function (envelope) {
 }
 
 // Protocol Implementation
-
-var VERSION = 1
+var PROTOCOL_VERSION = 1
 var NONCE_LENGTH = 24
 
 function ReplicationProtocol (secretKey) {
+  assert.equal(typeof secretKey, 'string')
+
   if (!(this instanceof ReplicationProtocol)) {
     return new ReplicationProtocol(secretKey)
   }
-
-  assert.equal(typeof secretKey, 'string')
 
   var self = this
   self._secretKeyBuffer = Buffer.from(secretKey, 'hex')
@@ -45,7 +42,7 @@ function ReplicationProtocol (secretKey) {
   self._sendingNonce = Buffer.alloc(NONCE_LENGTH)
   sodium.randombytes_buf(self._sendingNonce)
   debug('sending nonce: %o', self._sendingNonce.toString('hex'))
-  self._sendingCipher = cipher(
+  self._sendingCipher = makeCipher(
     self._sendingNonce, self._secretKeyBuffer
   )
   self._encoder = lengthPrefixedStream.encode()
@@ -107,7 +104,7 @@ ReplicationProtocol.prototype.handshake = function (callback) {
   if (self._sentNonce) return callback()
   debug('sending handshake')
   self._encode(HANDSHAKE, {
-    version: VERSION,
+    version: PROTOCOL_VERSION,
     nonce: this._sendingNonce.toString('hex')
   }, function (error) {
     if (error) return callback(error)
@@ -169,7 +166,7 @@ ReplicationProtocol.prototype._parse = function (message, callback) {
       debug('peer nonce: %o', body.nonce)
       this._receivingNonce = Buffer.from(body.nonce, 'hex')
       assert.equal(this._receivingNonce.byteLength, NONCE_LENGTH)
-      this._receivingCipher = cipher(
+      this._receivingCipher = makeCipher(
         this._receivingNonce, this._secretKeyBuffer
       )
       this.emit('handshake', callback) || callback()
@@ -190,7 +187,7 @@ ReplicationProtocol.prototype._parse = function (message, callback) {
 
 // Cryptographic Helper Functions
 
-function cipher (nonce, secretKeyBuffer) {
+function makeCipher (nonce, secretKeyBuffer) {
   assert(Buffer.isBuffer(nonce))
   assert(nonce.byteLength, NONCE_LENGTH)
   assert(Buffer.isBuffer(secretKeyBuffer))

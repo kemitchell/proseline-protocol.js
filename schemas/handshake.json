@@ -1,7 +1,9 @@
 {
+  "title": "handshake message",
   "type": "object",
   "properties": {
     "version": {
+      "title": "protocol version",
       "type": "number",
       "multipleOf": 1,
       "minimum": 1
