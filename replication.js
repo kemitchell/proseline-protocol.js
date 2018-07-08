@@ -5,8 +5,8 @@ var debug = require('debug')('proseline:protocol')
 var inherits = require('util').inherits
 var lengthPrefixedStream = require('length-prefixed-stream')
 var sodium = require('sodium-universal')
-var stringify = require('fast-json-stable-stringify')
 var through2 = require('through2')
+var verifySignature = require('./verify-signature')
 
 module.exports = Protocol
 
@@ -21,14 +21,7 @@ var validLog = ajv.compile(require('./schemas/log'))
 var validTuple = ajv.compile(require('./schemas/tuple'))
 var validEnvelopeData = ajv.compile(require('./schemas/envelope'))
 var validEnvelope = function (envelope) {
-  return (
-    validEnvelopeData(envelope) &&
-    verifySignature(
-      stringify(envelope.message),
-      envelope.signature,
-      envelope.publicKey
-    )
-  )
+  return validEnvelopeData(envelope) && verifySignature(envelope)
 }
 
 // Protocol Implementation
@@ -201,13 +194,5 @@ function cipher (nonce, secretKeyBuffer) {
   assert(Buffer.isBuffer(secretKeyBuffer))
   return sodium.crypto_stream_xor_instance(
     nonce, secretKeyBuffer
-  )
-}
-
-function verifySignature (message, signature, publicKey) {
-  return sodium.crypto_sign_verify_detached(
-    Buffer.from(signature, 'hex'),
-    Buffer.from(message),
-    Buffer.from(publicKey, 'hex')
   )
 }

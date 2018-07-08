@@ -1,3 +1,4 @@
 module.exports = {
-  replication: require('./replication')
+  replication: require('./replication'),
+  invitation: require('./invitation')
 }
