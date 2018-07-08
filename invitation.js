@@ -56,11 +56,9 @@ var validMessage = ajv.compile({
 
 var VERSION = 1
 
-function InvitationProtocol (secretKey) {
-  assert.equal(typeof secretKey, 'string')
-
+function InvitationProtocol () {
   if (!(this instanceof InvitationProtocol)) {
-    return new InvitationProtocol(secretKey)
+    return new InvitationProtocol()
   }
 
   var self = this
