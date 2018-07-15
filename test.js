@@ -36,6 +36,42 @@ tape('invitation', function (suite) {
   })
 })
 
+tape('request', function (suite) {
+  suite.test('send and receive request', function (test) {
+    var a = new protocol.Invitation()
+    var b = new protocol.Invitation()
+    a.pipe(b).pipe(a)
+    var keys = makeKeyPair()
+    var request = {
+      message: {
+        email: 'test@example.com',
+        date: new Date().toISOString()
+      },
+      publicKey: keys.publicKey.toString('hex')
+    }
+    var signature = Buffer.alloc(sodium.crypto_sign_BYTES)
+    sodium.crypto_sign_detached(
+      signature,
+      Buffer.from(stringify(request.message), 'utf8'),
+      keys.secretKey
+    )
+    request.signature = signature.toString('hex')
+    a.handshake(function (error) {
+      test.ifError(error, 'no a.handshake error')
+      b.handshake(function (error) {
+        test.ifError(error, 'no b.handshake error')
+        b.once('request', function (received) {
+          test.deepEqual(received, request, 'receives request')
+          test.end()
+        })
+        a.request(request, function (error) {
+          test.ifError(error, 'no a.request error')
+        })
+      })
+    })
+  })
+})
+
 tape('replication', function (suite) {
   suite.test('send and receive offer', function (test) {
     var secretKey = Buffer.alloc(64)

@@ -22,6 +22,26 @@ var validHandshake = ajv.compile(strictSchema({
   }
 }))
 
+// An introduction is signed message showing a peer's public key.
+var validRequestData = ajv.compile(strictSchema({
+  type: 'object',
+  properties: {
+    message: strictSchema({
+      type: 'object',
+      properties: {
+        email: {type: 'string', format: 'email'},
+        date: {type: 'string', format: 'date-time'}
+      }
+    }),
+    publicKey: {type: 'string', pattern: '^[a-f0-9]{64}$'},
+    signature: {type: 'string', pattern: '^[a-f0-9]{128}$'}
+  }
+}))
+
+var validRequest = function (envelope) {
+  return validRequestData(envelope) && verifySignature(envelope)
+}
+
 // An invitation is a signed copy of the secret key for a project.
 var validInvitationData = ajv.compile(strictSchema({
   type: 'object',
@@ -52,12 +72,13 @@ var validInvitation = function (envelope) {
 // Message Type Prefixes
 var HANDSHAKE = 0
 var INVITATION = 1
+var REQUEST = 2
 
 // Messages are sent as JSON-encoded [prefix, body] tuples.
 var validMessage = ajv.compile({
   type: 'array',
   items: [
-    {enum: [HANDSHAKE, INVITATION]},
+    {enum: [HANDSHAKE, INVITATION, REQUEST]},
     {type: 'object'}
   ],
   additionalItems: false
@@ -118,6 +139,16 @@ InvitationProtocol.prototype.invitation = function (invitation, callback) {
   this._encode(INVITATION, invitation, callback)
 }
 
+InvitationProtocol.prototype.request = function (request, callback) {
+  try {
+    assert(validRequest(request))
+  } catch (error) {
+    return callback(error)
+  }
+  debug('sending request: %o', request)
+  this._encode(REQUEST, request, callback)
+}
+
 InvitationProtocol.prototype.finalize = function (callback) {
   assert(typeof callback === 'function')
   var self = this
@@ -157,6 +188,8 @@ InvitationProtocol.prototype._parse = function (message, callback) {
   }
   if (prefix === INVITATION && validInvitation(body)) {
     this.emit('invitation', body, callback) || callback()
+  } else if (prefix === REQUEST && validRequest(body)) {
+    this.emit('request', body, callback) || callback()
   } else {
     debug('invalid message')
     callback()
