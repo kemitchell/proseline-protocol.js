@@ -10,7 +10,10 @@ tape('invitation', function (suite) {
     a.pipe(b).pipe(a)
     var keys = makeKeyPair()
     var invitation = {
-      message: {secretKey: 'a'.repeat(64)},
+      message: {
+        secretKey: 'a'.repeat(64),
+        title: 'test project'
+      },
       publicKey: keys.publicKey.toString('hex')
     }
     var signature = Buffer.alloc(sodium.crypto_sign_BYTES)

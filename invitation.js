@@ -49,7 +49,8 @@ var validInvitationData = ajv.compile(strictSchema({
     message: strictSchema({
       type: 'object',
       properties: {
-        secretKey: {type: 'string', pattern: '^[a-f0-9]{64}$'}
+        secretKey: {type: 'string', pattern: '^[a-f0-9]{64}$'},
+        title: {type: 'string', minLength: 1}
       }
     }),
     publicKey: {type: 'string', pattern: '^[a-f0-9]{64}$'},
