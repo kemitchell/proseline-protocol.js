@@ -46,13 +46,15 @@ var validRequest = function (envelope) {
 var validInvitationData = ajv.compile(strictSchema({
   type: 'object',
   properties: {
-    message: strictSchema({
+    message: {
       type: 'object',
       properties: {
         secretKey: {type: 'string', pattern: '^[a-f0-9]{64}$'},
         title: {type: 'string', minLength: 1}
-      }
-    }),
+      },
+      required: ['secretKey'],
+      additionalProperties: false
+    },
     publicKey: {type: 'string', pattern: '^[a-f0-9]{64}$'},
     signature: {type: 'string', pattern: '^[a-f0-9]{128}$'}
   }
