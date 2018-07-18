@@ -131,21 +131,13 @@ InvitationProtocol.prototype.handshake = function (callback) {
 }
 
 InvitationProtocol.prototype.invitation = function (invitation, callback) {
-  try {
-    assert(validInvitation(invitation))
-  } catch (error) {
-    return callback(error)
-  }
+  assert(validInvitation(invitation))
   debug('sending invitation: %o', invitation)
   this._encode(INVITATION, invitation, callback)
 }
 
 InvitationProtocol.prototype.request = function (request, callback) {
-  try {
-    assert(validRequest(request))
-  } catch (error) {
-    return callback(error)
-  }
+  assert(validRequest(request))
   debug('sending request: %o', request)
   this._encode(REQUEST, request, callback)
 }
