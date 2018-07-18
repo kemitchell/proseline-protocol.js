@@ -179,7 +179,8 @@ InvitationProtocol.prototype._parse = function (message, callback) {
       return callback(new Error('incompatible version'))
     }
     this._receivedHandshake = true
-    return this.emit('handshake')
+    this.emit('handshake')
+    return callback()
   } else if (!this._receivedHandshake) {
     message = 'message before handshake'
     debug(message)
