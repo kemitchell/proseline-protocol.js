@@ -187,12 +187,12 @@ InvitationProtocol.prototype._parse = function (message, callback) {
   }
   if (prefix === INVITATION && validInvitation(body)) {
     this.emit('invitation', body)
-    callback()
-  } else if (prefix === REQUEST && validRequest(body)) {
-    this.emit('request', body)
-    callback()
-  } else {
-    debug('invalid body: %o', body)
-    callback()
+    return callback()
   }
+  if (prefix === REQUEST && validRequest(body)) {
+    this.emit('request', body)
+    return callback()
+  }
+  debug('invalid body: %o', body)
+  callback()
 }
