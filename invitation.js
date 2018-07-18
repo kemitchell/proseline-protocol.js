@@ -79,7 +79,10 @@ var REQUEST = 2
 var validMessage = ajv.compile({
   type: 'array',
   items: [
-    {enum: [HANDSHAKE, INVITATION, REQUEST]},
+    {
+      type: 'number',
+      enum: [HANDSHAKE, INVITATION, REQUEST]
+    },
     {type: 'object'}
   ],
   additionalItems: false
@@ -163,7 +166,7 @@ InvitationProtocol.prototype._parse = function (message, callback) {
     return callback(error)
   }
   if (!validMessage(parsed)) {
-    debug('invalid message')
+    debug('invalid message %o', parsed)
     return callback(new Error('invalid message'))
   }
   var prefix = parsed[0]
