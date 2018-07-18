@@ -166,8 +166,8 @@ InvitationProtocol.prototype._parse = function (message, callback) {
     return callback(error)
   }
   if (!validMessage(parsed)) {
-    debug('invalid message %o', parsed)
-    return callback(new Error('invalid message'))
+    debug('invalid tuple: %o', parsed)
+    return callback(new Error('invalid tuple'))
   }
   var prefix = parsed[0]
   var body = parsed[1]
@@ -190,7 +190,7 @@ InvitationProtocol.prototype._parse = function (message, callback) {
     this.emit('request', body)
     callback()
   } else {
-    debug('invalid message')
+    debug('invalid body: %o', body)
     callback()
   }
 }
