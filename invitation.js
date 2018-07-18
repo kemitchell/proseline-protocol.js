@@ -181,9 +181,11 @@ InvitationProtocol.prototype._parse = function (message, callback) {
     return callback(new Error(message))
   }
   if (prefix === INVITATION && validInvitation(body)) {
-    this.emit('invitation', body, callback) || callback()
+    this.emit('invitation', body)
+    callback()
   } else if (prefix === REQUEST && validRequest(body)) {
-    this.emit('request', body, callback) || callback()
+    this.emit('request', body)
+    callback()
   } else {
     debug('invalid message')
     callback()
