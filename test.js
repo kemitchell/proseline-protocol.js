@@ -23,18 +23,20 @@ tape('invitation', function (suite) {
       keys.secretKey
     )
     invitation.signature = signature.toString('hex')
+    a.once('handshake', function () {
+      a.invitation(invitation, function (error) {
+        test.ifError(error, 'no a.invitation error')
+      })
+    })
+    b.once('invitation', function (received) {
+      test.deepEqual(received, invitation, 'receives invitation')
+      test.end()
+    })
     a.handshake(function (error) {
       test.ifError(error, 'no a.handshake error')
-      b.handshake(function (error) {
-        test.ifError(error, 'no b.handshake error')
-        b.once('invitation', function (received) {
-          test.deepEqual(received, invitation, 'receives invitation')
-          test.end()
-        })
-        a.invitation(invitation, function (error) {
-          test.ifError(error, 'no a.invitation error')
-        })
-      })
+    })
+    b.handshake(function (error) {
+      test.ifError(error, 'no a.handshake error')
     })
   })
 })
