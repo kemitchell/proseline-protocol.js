@@ -181,20 +181,25 @@ ReplicationProtocol.prototype._parse = function (message, callback) {
       this._receivingCipher = makeCipher(
         this._receivingNonce, this._secretKeyBuffer
       )
-      this.emit('handshake', callback) || callback()
-    } else {
-      callback()
+      this.emit('handshake')
+      return callback()
     }
-  } else if (prefix === OFFER && validLog(body)) {
-    this.emit('offer', body, callback) || callback()
-  } else if (prefix === REQUEST && validLog(body)) {
-    this.emit('request', body, callback) || callback()
-  } else if (prefix === ENVELOPE && validEnvelope(body)) {
-    this.emit('envelope', body, callback) || callback()
-  } else {
-    debug('invalid message')
-    callback()
+    return callback()
   }
+  if (prefix === OFFER && validLog(body)) {
+    this.emit('offer', body)
+    return callback()
+  }
+  if (prefix === REQUEST && validLog(body)) {
+    this.emit('request', body)
+    return callback()
+  }
+  if (prefix === ENVELOPE && validEnvelope(body)) {
+    this.emit('envelope', body)
+    return callback()
+  }
+  debug('invalid message')
+  callback()
 }
 
 // Cryptographic Helper Functions
