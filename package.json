@@ -8,6 +8,7 @@
     "debug": "^3.1.0",
     "duplexify": "^3.6.0",
     "fast-json-stable-stringify": "^2.0.0",
+    "inherits": "^2.0.3",
     "length-prefixed-stream": "^1.6.0",
     "sodium-universal": "^2.0.0",
     "through2": "^2.0.3"
