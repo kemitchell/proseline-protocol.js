@@ -184,6 +184,7 @@ ReplicationProtocol.prototype._parse = function (message, callback) {
       this.emit('handshake')
       return callback()
     }
+    this.emit('handshake')
     return callback()
   }
   if (prefix === OFFER && validLog(body)) {
