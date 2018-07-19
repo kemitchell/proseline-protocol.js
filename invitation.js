@@ -181,7 +181,8 @@ InvitationProtocol.prototype._parse = function (message, callback) {
     this._receivedHandshake = true
     this.emit('handshake')
     return callback()
-  } else if (!this._receivedHandshake) {
+  }
+  if (!this._receivedHandshake) {
     message = 'message before handshake'
     debug(message)
     return callback(new Error(message))
