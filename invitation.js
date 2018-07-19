@@ -194,6 +194,6 @@ InvitationProtocol.prototype._parse = function (message, callback) {
     this.emit('request', body)
     return callback()
   }
-  debug('invalid body: %o', body)
+  this.emit('invalid', body)
   callback()
 }

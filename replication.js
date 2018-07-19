@@ -198,7 +198,7 @@ ReplicationProtocol.prototype._parse = function (message, callback) {
     this.emit('envelope', body)
     return callback()
   }
-  debug('invalid message')
+  this.emit('invalid', body)
   callback()
 }
 
