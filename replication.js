@@ -1,7 +1,6 @@
 var AJV = require('ajv')
 var Duplexify = require('duplexify')
 var assert = require('assert')
-var debug = require('debug')('proseline:protocol:replication')
 var inherits = require('inherits')
 var lengthPrefixedStream = require('length-prefixed-stream')
 var sodium = require('sodium-universal')
@@ -53,7 +52,6 @@ function ReplicationProtocol (secretKey) {
   // Cryptographic stream using our nonce and the secret key.
   self._sendingNonce = Buffer.alloc(NONCE_LENGTH)
   sodium.randombytes_buf(self._sendingNonce)
-  debug('sending nonce: %o', self._sendingNonce.toString('hex'))
   self._sendingCipher = makeCipher(
     self._sendingNonce, self._secretKeyBuffer
   )
@@ -114,7 +112,6 @@ var ENVELOPE = 3
 ReplicationProtocol.prototype.handshake = function (callback) {
   var self = this
   if (self._sentNonce) return callback()
-  debug('sending handshake')
   self._encode(HANDSHAKE, {
     version: PROTOCOL_VERSION,
     nonce: this._sendingNonce.toString('hex')
@@ -127,19 +124,16 @@ ReplicationProtocol.prototype.handshake = function (callback) {
 
 ReplicationProtocol.prototype.offer = function (offer, callback) {
   assert(validLog(offer))
-  debug('offering: %o', offer)
   this._encode(OFFER, offer, callback)
 }
 
 ReplicationProtocol.prototype.request = function (request, callback) {
   assert(validLog(request))
-  debug('requesting: %o', request)
   this._encode(REQUEST, request, callback)
 }
 
 ReplicationProtocol.prototype.envelope = function (envelope, callback) {
   assert(validEnvelope(envelope))
-  debug('sending envelope: %o', envelope)
   this._encode(ENVELOPE, envelope, callback)
 }
 
@@ -168,14 +162,12 @@ ReplicationProtocol.prototype._parse = function (message, callback) {
     return callback(error)
   }
   if (!validTuple(parsed)) {
-    debug('invalid message')
     return callback(new Error('invalid message'))
   }
   var prefix = parsed[0]
   var body = parsed[1]
   if (prefix === HANDSHAKE && validHandshake(body)) {
     if (!this._receivingCipher) {
-      debug('peer nonce: %o', body.nonce)
       this._receivingNonce = Buffer.from(body.nonce, 'hex')
       assert.equal(this._receivingNonce.byteLength, NONCE_LENGTH)
       this._receivingCipher = makeCipher(

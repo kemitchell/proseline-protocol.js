@@ -1,7 +1,6 @@
 var AJV = require('ajv')
 var Duplexify = require('duplexify')
 var assert = require('assert')
-var debug = require('debug')('proseline:protocol:invitation')
 var inherits = require('inherits')
 var lengthPrefixedStream = require('length-prefixed-stream')
 var through2 = require('through2')
@@ -127,7 +126,6 @@ inherits(InvitationProtocol, Duplexify)
 InvitationProtocol.prototype.handshake = function (callback) {
   var self = this
   if (self._sentHandshake) return callback()
-  debug('sending handshake')
   self._encode(HANDSHAKE, {version: PROTOCOL_VERSION}, function (error) {
     if (error) return callback(error)
     self._sentHandshake = true
@@ -137,13 +135,11 @@ InvitationProtocol.prototype.handshake = function (callback) {
 
 InvitationProtocol.prototype.invitation = function (invitation, callback) {
   assert(validInvitation(invitation))
-  debug('sending invitation: %o', invitation)
   this._encode(INVITATION, invitation, callback)
 }
 
 InvitationProtocol.prototype.request = function (request, callback) {
   assert(validRequest(request))
-  debug('sending request: %o', request)
   this._encode(REQUEST, request, callback)
 }
 
@@ -168,14 +164,12 @@ InvitationProtocol.prototype._parse = function (message, callback) {
     return callback(error)
   }
   if (!validMessage(parsed)) {
-    debug('invalid tuple: %o', parsed)
     return callback(new Error('invalid tuple'))
   }
   var prefix = parsed[0]
   var body = parsed[1]
   if (prefix === HANDSHAKE && validHandshake(body)) {
     if (body.version !== PROTOCOL_VERSION) {
-      debug('incompatible version: ' + body.version)
       return callback(new Error('incompatible version'))
     }
     this._receivedHandshake = true
@@ -184,7 +178,6 @@ InvitationProtocol.prototype._parse = function (message, callback) {
   }
   if (!this._receivedHandshake) {
     message = 'message before handshake'
-    debug(message)
     return callback(new Error(message))
   }
   if (prefix === INVITATION && validInvitation(body)) {
