@@ -79,11 +79,10 @@ tape('request', function (suite) {
 
 tape('replication', function (suite) {
   suite.test('send and receive offer', function (test) {
-    var secretKey = Buffer.alloc(64)
-    sodium.randombytes_buf(secretKey)
-    var secretKeyHex = secretKey.toString('hex')
-    var a = protocol.Replication(secretKeyHex)
-    var b = protocol.Replication(secretKeyHex)
+    var replicationKey = Buffer.alloc(32)
+    sodium.randombytes_buf(replicationKey)
+    var a = protocol.Replication({replicationKey})
+    var b = protocol.Replication({replicationKey})
     a.pipe(b).pipe(a)
     a.handshake(function (error) {
       test.ifError(error, 'no a.handshake error')
