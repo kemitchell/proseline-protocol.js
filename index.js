@@ -1,5 +1,6 @@
 var encryptedJSONProtocol = require('encrypted-json-protocol')
 var verifySignature = require('./verify-signature')
+var strictObjectSchema = require('strict-json-object-schema')
 
 var logEntrySchema = strictObjectSchema({
   publicKey: {
@@ -53,11 +54,4 @@ module.exports = {
     }
   }),
   Invitation: require('./invitation')
-}
-
-function strictObjectSchema (properties) {
-  var schema = {properties: properties}
-  schema.required = Object.keys(properties)
-  schema.additionalProperties = false
-  return schema
 }
