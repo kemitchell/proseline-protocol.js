@@ -10,6 +10,7 @@
     "progress": "1.1.8",
     "rechoir": "0.6.2",
     "rx-lite": "3.1.2 || 4.0.8",
-    "rx-lite-aggregates": "4.0.8"
+    "rx-lite-aggregates": "4.0.8",
+    "encrypted-json-protocol": "*"
   }
 }
