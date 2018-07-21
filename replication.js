@@ -10,13 +10,63 @@ var SIGN_PUBLICKEYBYTES = sodium.crypto_sign_PUBLICKEYBYTES
 var project = hexString(GENERICHASH_BYTES)
 var publicKey = hexString(SIGN_PUBLICKEYBYTES)
 var signature = hexString(SIGN_BYTES)
+var digest = hexString(GENERICHASH_BYTES)
+var timestamp = {type: 'string', format: 'date-time'}
+var name = {type: 'string', minLength: 1, maxLength: 256}
 
-var body = {
-  title: 'log entry payload',
-  type: 'object'
-}
+var draft = strictObjectSchema({
+  type: {const: 'draft'},
+  parents: {
+    type: 'array',
+    items: digest,
+    maxItems: 2,
+    uniqueItems: true
+  },
+  text: {type: 'string'},
+  timestamp: timestamp
+})
 
-var logEntrySchema = strictObjectSchema({
+var mark = strictObjectSchema({
+  type: {const: 'mark'},
+  identifier: hexString(4),
+  name: {
+    type: 'string',
+    minLength: 1,
+    maxLength: 256
+  },
+  timestamp: timestamp,
+  draft: digest
+})
+
+var note = strictObjectSchema({
+  type: {const: 'note'},
+  draft: digest,
+  range: strictObjectSchema({
+    start: {type: 'integer', minimum: 0},
+    end: {type: 'integer', minimum: 1}
+  }),
+  text: {type: 'string', minLength: 1},
+  timestamp: timestamp
+})
+
+var reply = strictObjectSchema({
+  type: {const: 'note'},
+  draft: digest,
+  parent: digest,
+  text: {type: 'string', minLength: 1},
+  timestamp: timestamp
+})
+
+var intro = strictObjectSchema({
+  type: {const: 'intro'},
+  name: name,
+  device: name,
+  timestamp: timestamp
+})
+
+var body = {oneOf: [draft, mark, intro, note, reply]}
+
+var entry = strictObjectSchema({
   publicKey: publicKey,
   index: {type: 'integer', minimum: 0}
 })
@@ -34,7 +84,7 @@ var laterEntry = strictObjectSchema({
   body: body
 })
 
-var envelopeSchema = strictObjectSchema({
+var envelope = strictObjectSchema({
   message: {oneOf: [firstEntry, laterEntry]},
   publicKey: publicKey,
   signature: signature,
@@ -51,10 +101,10 @@ function hexString (bytes) {
 module.exports = encryptedJSONProtocol({
   version: 2,
   messages: {
-    offer: {schema: logEntrySchema},
-    request: {schema: logEntrySchema},
+    offer: {schema: entry},
+    request: {schema: entry},
     envelope: {
-      schema: envelopeSchema,
+      schema: envelope,
       verify: verifySignature
     }
   }

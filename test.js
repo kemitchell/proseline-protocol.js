@@ -3,6 +3,13 @@ var sodium = require('sodium-universal')
 var stringify = require('fast-json-stable-stringify')
 var tape = require('tape')
 
+var intro = {
+  type: 'intro',
+  name: 'alice',
+  device: 'laptop',
+  timestamp: new Date().toISOString()
+}
+
 tape('send and receive invitation', function (test) {
   var replicationKey = makeReplicationKey()
   var writeSeed = makeSeed()
@@ -147,7 +154,7 @@ tape('send offer for envelope', function (test) {
       message: {
         project: discoveryKey.toString('hex'),
         index: 0,
-        body: {arbitrary: 'data'}
+        body: intro
       },
       publicKey: aliceKeyPair.publicKey.toString('hex')
     }
@@ -196,7 +203,7 @@ tape('entry links', function (test) {
     var validFirstEnvelope = makeEnvelope({
       project: discoveryKey.toString('hex'),
       index: 0,
-      body: {arbitrary: 'data'}
+      body: intro
     })
     test.doesNotThrow(function () {
       alice.envelope(validFirstEnvelope, function () { })
@@ -204,7 +211,7 @@ tape('entry links', function (test) {
     var invalidSecondEnvelope = makeEnvelope({
       project: discoveryKey.toString('hex'),
       index: 1,
-      body: {arbitrary: 'data'}
+      body: intro
     })
     test.throws(function () {
       alice.envelope(invalidSecondEnvelope, function () { })
@@ -218,7 +225,7 @@ tape('entry links', function (test) {
       project: discoveryKey.toString('hex'),
       index: 1,
       prior: digest.toString('hex'),
-      body: {arbitrary: 'data'}
+      body: intro
     })
     test.doesNotThrow(function () {
       alice.envelope(validSecondEnvelope, function () { })
