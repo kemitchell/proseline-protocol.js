@@ -50,6 +50,38 @@ tape('invitation', function (suite) {
   })
 })
 
+tape('invitation without seed', function (test) {
+  var replicationKey = Buffer.alloc(sodium.crypto_stream_KEYBYTES)
+  sodium.randombytes_buf(replicationKey)
+
+  var writeSeed = Buffer.alloc(sodium.crypto_sign_SEEDBYTES)
+  sodium.randombytes_buf(writeSeed)
+
+  var stream = new protocol.Invitation()
+
+  var keyPair = makeKeyPair()
+  var invitation = {
+    message: {
+      replicationKey: replicationKey.toString('hex'),
+      title: 'test project'
+    },
+    publicKey: keyPair.publicKey.toString('hex')
+  }
+  var signature = Buffer.alloc(sodium.crypto_sign_BYTES)
+  sodium.crypto_sign_detached(
+    signature,
+    Buffer.from(stringify(invitation.message), 'utf8'),
+    keyPair.secretKey
+  )
+  invitation.signature = signature.toString('hex')
+  stream.handshake(function () {
+    test.doesNotThrow(function () {
+      stream.invitation(invitation, function (error) { })
+    }, 'valid invitation')
+    test.end()
+  })
+})
+
 tape('request', function (suite) {
   suite.test('send and receive request', function (test) {
     var a = new protocol.Invitation()
