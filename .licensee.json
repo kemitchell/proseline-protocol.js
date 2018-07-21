@@ -12,6 +12,8 @@
     "rechoir": "0.6.2",
     "rx-lite": "3.1.2 || 4.0.8",
     "rx-lite-aggregates": "4.0.8",
-    "encrypted-json-protocol": "*"
+    "normalize-path": "1.0.0",
+    "repeat-element": "1.1.2",
+    "json-protocol": "*"
   }
 }
