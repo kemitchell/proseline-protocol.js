@@ -14,8 +14,8 @@ tape('send and receive invitation', function (test) {
   var encryptionKey = makeEncryptionKey()
   var writeSeed = makeSeed()
 
-  var alice = new protocol.Invitation()
-  var bob = new protocol.Invitation()
+  var alice = new protocol.Invitation({})
+  var bob = new protocol.Invitation({})
 
   alice.pipe(bob).pipe(alice)
 
@@ -96,8 +96,9 @@ tape('send and receive request', function (test) {
 
 tape('send and receive offer', function (test) {
   var encryptionKey = makeEncryptionKey()
-  var alice = protocol.Replication({encryptionKey})
-  var bob = protocol.Replication({encryptionKey})
+  var projectKeyPair = makeKeyPair()
+  var alice = protocol.Replication({encryptionKey, publicKey: projectKeyPair.publicKey, secretKey: projectKeyPair.secretKey})
+  var bob = protocol.Replication({encryptionKey, publicKey: projectKeyPair.publicKey, secretKey: projectKeyPair.secretKey})
   alice.pipe(bob).pipe(alice)
   alice.handshake(function (error) {
     test.ifError(error, 'no a.handshake error')

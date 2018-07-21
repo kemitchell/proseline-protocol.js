@@ -1,29 +1,18 @@
 var JSONProtocol = require('json-protocol')
+var common = require('./common')
 var sodium = require('sodium-universal')
 var strictObjectSchema = require('strict-json-object-schema')
 var stringify = require('fast-json-stable-stringify')
 
 var GENERICHASH_BYTES = sodium.crypto_generichash_BYTES
-var SIGN_BYTES = sodium.crypto_sign_BYTES
-var SIGN_PUBLICKEYBYTES = sodium.crypto_sign_PUBLICKEYBYTES
 
 // JSON Schemas reused below:
 
-var project = hexString(GENERICHASH_BYTES)
-var publicKey = hexString(SIGN_PUBLICKEYBYTES)
-var signature = hexString(SIGN_BYTES)
-var digest = hexString(GENERICHASH_BYTES)
+var project = common.hexString(GENERICHASH_BYTES)
+var digest = common.hexString(GENERICHASH_BYTES)
 var timestamp = {type: 'string', format: 'date-time'}
 var name = {type: 'string', minLength: 1, maxLength: 256}
 var noteText = {type: 'string', minLength: 1}
-
-// Schemas represent byte strings as hex strings.
-function hexString (bytes) {
-  return {
-    type: 'string',
-    pattern: '^[a-f0-9]{' + (bytes * 2) + '}$'
-  }
-}
 
 // Log Entry Types
 
@@ -49,7 +38,7 @@ var mark = strictObjectSchema({
   type: {const: 'mark'},
   // Each identifier has a unique identifier. User may
   // change the names of identifiers over time.
-  identifier: hexString(4),
+  identifier: common.hexString(4),
   name: {
     type: 'string',
     minLength: 1,
@@ -112,7 +101,7 @@ var firstEntry = strictObjectSchema({
 var laterEntry = strictObjectSchema({
   project: project,
   index: {type: 'integer', minimum: 1},
-  prior: hexString(GENERICHASH_BYTES),
+  prior: common.hexString(GENERICHASH_BYTES),
   body: body
 })
 
@@ -120,11 +109,11 @@ var laterEntry = strictObjectSchema({
 var envelope = strictObjectSchema({
   message: {oneOf: [firstEntry, laterEntry]},
   // The public key of the log.
-  publicKey: publicKey,
+  publicKey: common.publicKey,
   // Signature with the secret key of the log.
-  signature: signature,
+  signature: common.signature,
   // Signature with the secret key of the project.
-  authorization: signature
+  authorization: common.signature
 })
 
 // References
@@ -133,14 +122,14 @@ var envelope = strictObjectSchema({
 // key and integer index. Peers exchange references to offer
 // and request log entries.
 var reference = strictObjectSchema({
-  publicKey: publicKey,
+  publicKey: common.publicKey,
   index: {type: 'integer', minimum: 0}
 })
 
 module.exports = JSONProtocol({
   version: 2,
   sign: false,
-  requiredSigningKeys: true,
+  requireSigningKeys: true,
   encrypt: true,
   messages: {
     // Offer messages indicate that a peer can send a

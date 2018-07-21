@@ -8,7 +8,7 @@
     "duplexify": "^3.6.0",
     "fast-json-stable-stringify": "^2.0.0",
     "inherits": "^2.0.3",
-    "json-protocol": "^2.0.0",
+    "json-protocol": "^2.0.2",
     "length-prefixed-stream": "^1.6.0",
     "sodium-universal": "^2.0.0",
     "strict-json-object-schema": "^1.0.1",
