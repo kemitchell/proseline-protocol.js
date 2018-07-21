@@ -217,10 +217,10 @@ tape('entry links', function (test) {
     var validSecondEnvelope = makeEnvelope({
       project: discoveryKey.toString('hex'),
       index: 1,
-      prior: digest,
+      prior: digest.toString('hex'),
       body: {arbitrary: 'data'}
     })
-    test.throws(function () {
+    test.doesNotThrow(function () {
       alice.envelope(validSecondEnvelope, function () { })
     }, /invalid envelope/, 'index: 1, prior: digest valid')
     test.end()
