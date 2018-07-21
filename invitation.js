@@ -12,7 +12,7 @@ module.exports = InvitationProtocol
 
 var ajv = new AJV()
 
-var PROTOCOL_VERSION = 1
+var PROTOCOL_VERSION = 2
 
 var validHandshake = ajv.compile(strictSchema({
   type: 'object',
@@ -48,10 +48,11 @@ var validInvitationData = ajv.compile(strictSchema({
     message: {
       type: 'object',
       properties: {
-        secretKey: {type: 'string', pattern: '^[a-f0-9]{64}$'},
+        replicationKey: {type: 'string', pattern: '^[a-f0-9]{64}$'},
+        writeSeed: {type: 'string', pattern: '^[a-f0-9]{64}$'},
         title: {type: 'string', minLength: 1}
       },
-      required: ['secretKey'],
+      required: ['replicationKey'],
       additionalProperties: false
     },
     publicKey: {type: 'string', pattern: '^[a-f0-9]{64}$'},

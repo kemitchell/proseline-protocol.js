@@ -38,12 +38,16 @@ var envelopeSchema = strictObjectSchema({
   signature: {
     type: 'string',
     pattern: '^[a-f0-9]{128}$'
+  },
+  authorization: {
+    type: 'string',
+    pattern: '^[a-f0-9]{128}$'
   }
 })
 
 module.exports = {
   Replication: encryptedJSONProtocol({
-    version: 1,
+    version: 2,
     messages: {
       offer: {schema: logEntrySchema},
       request: {schema: logEntrySchema},

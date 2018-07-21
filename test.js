@@ -5,22 +5,31 @@ var tape = require('tape')
 
 tape('invitation', function (suite) {
   suite.test('send and receive invitation', function (test) {
+    var replicationKey = Buffer.alloc(sodium.crypto_stream_KEYBYTES)
+    sodium.randombytes_buf(replicationKey)
+
+    var writeSeed = Buffer.alloc(sodium.crypto_sign_SEEDBYTES)
+    sodium.randombytes_buf(writeSeed)
+
     var a = new protocol.Invitation()
     var b = new protocol.Invitation()
+
     a.pipe(b).pipe(a)
-    var keys = makeKeyPair()
+
+    var keyPair = makeKeyPair()
     var invitation = {
       message: {
-        secretKey: 'a'.repeat(64),
+        replicationKey: replicationKey.toString('hex'),
+        writeSeed: 'a'.repeat(64),
         title: 'test project'
       },
-      publicKey: keys.publicKey.toString('hex')
+      publicKey: keyPair.publicKey.toString('hex')
     }
     var signature = Buffer.alloc(sodium.crypto_sign_BYTES)
     sodium.crypto_sign_detached(
       signature,
       Buffer.from(stringify(invitation.message), 'utf8'),
-      keys.secretKey
+      keyPair.secretKey
     )
     invitation.signature = signature.toString('hex')
     a.once('handshake', function () {
@@ -46,19 +55,19 @@ tape('request', function (suite) {
     var a = new protocol.Invitation()
     var b = new protocol.Invitation()
     a.pipe(b).pipe(a)
-    var keys = makeKeyPair()
+    var keyPair = makeKeyPair()
     var request = {
       message: {
         email: 'test@example.com',
         date: new Date().toISOString()
       },
-      publicKey: keys.publicKey.toString('hex')
+      publicKey: keyPair.publicKey.toString('hex')
     }
     var signature = Buffer.alloc(sodium.crypto_sign_BYTES)
     sodium.crypto_sign_detached(
       signature,
       Buffer.from(stringify(request.message), 'utf8'),
-      keys.secretKey
+      keyPair.secretKey
     )
     request.signature = signature.toString('hex')
     a.handshake(function (error) {
@@ -79,7 +88,7 @@ tape('request', function (suite) {
 
 tape('replication', function (suite) {
   suite.test('send and receive offer', function (test) {
-    var replicationKey = Buffer.alloc(32)
+    var replicationKey = Buffer.alloc(sodium.crypto_stream_KEYBYTES)
     sodium.randombytes_buf(replicationKey)
     var a = protocol.Replication({replicationKey})
     var b = protocol.Replication({replicationKey})
@@ -99,6 +108,86 @@ tape('replication', function (suite) {
       })
     })
   })
+})
+
+tape('send offer for envelope', function (test) {
+  var replicationKey = Buffer.alloc(sodium.crypto_stream_KEYBYTES)
+  sodium.randombytes_buf(replicationKey)
+  var discoveryKey = Buffer.alloc(sodium.crypto_generichash_BYTES)
+  sodium.crypto_generichash(discoveryKey, replicationKey)
+
+  var writeSeed = Buffer.alloc(sodium.crypto_sign_SEEDBYTES)
+  sodium.randombytes_buf(writeSeed)
+  var writeKeyPair = {
+    publicKey: Buffer.alloc(sodium.crypto_sign_PUBLICKEYBYTES),
+    secretKey: Buffer.alloc(sodium.crypto_sign_SECRETKEYBYTES)
+  }
+  sodium.crypto_sign_seed_keypair(
+    writeKeyPair.publicKey, writeKeyPair.secretKey, writeSeed
+  )
+
+  var anna = protocol.Replication({replicationKey})
+  var annasKeyPair = makeKeyPair()
+  var bob = protocol.Replication({replicationKey})
+
+  anna.handshake(function (error) {
+    test.ifError(error, 'anna sent handshake')
+  })
+
+  bob.handshake(function (error) {
+    test.ifError(error, 'bob sent handshake')
+  })
+
+  anna.once('request', function (request) {
+    test.equal(
+      request.publicKey, annasKeyPair.publicKey.toString('hex'),
+      'anna received request for anna log'
+    )
+    test.equal(
+      request.index, 0,
+      'anna received request for entry 0'
+    )
+    var envelope = {
+      message: {
+        project: discoveryKey.toString('hex'),
+        index: 0,
+        body: {arbitrary: 'data'}
+      },
+      publicKey: annasKeyPair.publicKey.toString('hex')
+    }
+    var signature = Buffer.alloc(sodium.crypto_sign_BYTES)
+    sodium.crypto_sign_detached(
+      signature,
+      Buffer.from(stringify(envelope.message), 'utf8'),
+      annasKeyPair.secretKey
+    )
+    envelope.signature = signature.toString('hex')
+    var authorization = Buffer.alloc(sodium.crypto_sign_BYTES)
+    sodium.crypto_sign_detached(
+      authorization,
+      Buffer.from(stringify(envelope.message), 'utf8'),
+      writeKeyPair.secretKey
+    )
+    envelope.authorization = authorization.toString('hex')
+    anna.envelope(envelope, function (error) {
+      test.ifError(error, 'anna sent envelope')
+    })
+  })
+
+  bob.once('handshake', function () {
+    bob.request({
+      publicKey: annasKeyPair.publicKey.toString('hex'),
+      index: 0
+    }, function (error) {
+      test.ifError(error, 'bob sent request')
+    })
+    bob.once('envelope', function (envelope) {
+      test.pass('bob received envelope')
+      test.end()
+    })
+  })
+
+  anna.pipe(bob).pipe(anna)
 })
 
 function makeKeyPair () {
