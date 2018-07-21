@@ -190,6 +190,83 @@ tape('send offer for envelope', function (test) {
   anna.pipe(bob).pipe(anna)
 })
 
+tape('entry links', function (test) {
+  var replicationKey = Buffer.alloc(sodium.crypto_stream_KEYBYTES)
+  sodium.randombytes_buf(replicationKey)
+  var discoveryKey = Buffer.alloc(sodium.crypto_generichash_BYTES)
+  sodium.crypto_generichash(discoveryKey, replicationKey)
+
+  var projectSeed = Buffer.alloc(sodium.crypto_sign_SEEDBYTES)
+  sodium.randombytes_buf(projectSeed)
+  var projectKeyPair = {
+    publicKey: Buffer.alloc(sodium.crypto_sign_PUBLICKEYBYTES),
+    secretKey: Buffer.alloc(sodium.crypto_sign_SECRETKEYBYTES)
+  }
+  sodium.crypto_sign_seed_keypair(
+    projectKeyPair.publicKey, projectKeyPair.secretKey, projectSeed
+  )
+
+  var anna = protocol.Replication({replicationKey})
+  var logKeyPair = makeKeyPair()
+
+  anna.handshake(function (error) {
+    test.ifError(error, 'anna sent handshake')
+    var validFirstEnvelope = makeEnvelope({
+      project: discoveryKey.toString('hex'),
+      index: 0,
+      body: {arbitrary: 'data'}
+    })
+    test.doesNotThrow(function () {
+      anna.envelope(validFirstEnvelope, function () { })
+    }, 'index: 0, prior: none valid')
+    var invalidSecondEnvelope = makeEnvelope({
+      project: discoveryKey.toString('hex'),
+      index: 1,
+      body: {arbitrary: 'data'}
+    })
+    test.throws(function () {
+      anna.envelope(invalidSecondEnvelope, function () { })
+    }, /invalid envelope/, 'index: 1, prior: none invalid')
+    var digest = Buffer.alloc(sodium.crypto_generichash_BYTES)
+    sodium.crypto_generichash(digest, Buffer.from(
+      JSON.stringify(validFirstEnvelope.message),
+      'utf8'
+    ))
+    var validSecondEnvelope = makeEnvelope({
+      project: discoveryKey.toString('hex'),
+      index: 1,
+      prior: digest,
+      body: {arbitrary: 'data'}
+    })
+    test.throws(function () {
+      anna.envelope(validSecondEnvelope, function () { })
+    }, /invalid envelope/, 'index: 1, prior: digest valid')
+    test.end()
+  })
+
+  function makeEnvelope (message) {
+    var envelope = {
+      message: message,
+      publicKey: logKeyPair.publicKey.toString('hex')
+    }
+    var signature = Buffer.alloc(sodium.crypto_sign_BYTES)
+    sodium.crypto_sign_detached(
+      signature,
+      Buffer.from(stringify(envelope.message), 'utf8'),
+      logKeyPair.secretKey
+    )
+    envelope.signature = signature.toString('hex')
+    var authorization = Buffer.alloc(sodium.crypto_sign_BYTES)
+    sodium.crypto_sign_detached(
+      authorization,
+      Buffer.from(stringify(envelope.message), 'utf8'),
+      projectKeyPair.secretKey
+    )
+    envelope.authorization = authorization.toString('hex')
+    return envelope
+  }
+})
+
 function makeKeyPair () {
   var publicKey = Buffer.alloc(sodium.crypto_sign_PUBLICKEYBYTES)
   var secretKey = Buffer.alloc(sodium.crypto_sign_SECRETKEYBYTES)
