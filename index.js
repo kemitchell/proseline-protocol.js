@@ -15,22 +15,27 @@ var logEntrySchema = strictObjectSchema({
 })
 
 var envelopeSchema = strictObjectSchema({
-  message: strictObjectSchema({
-    project: {
-      title: 'project discovery key',
-      type: 'string',
-      pattern: '^[a-f0-9]{64}$'
+  message: {
+    type: 'object',
+    properties: {
+      project: {
+        title: 'project discovery key',
+        type: 'string',
+        pattern: '^[a-f0-9]{64}$'
+      },
+      index: {
+        title: 'log entry index',
+        type: 'integer',
+        minimum: 0
+      },
+      body: {
+        title: 'log entry payload',
+        type: 'object'
+      }
     },
-    index: {
-      title: 'log entry index',
-      type: 'integer',
-      minimum: 0
-    },
-    body: {
-      title: 'log entry payload',
-      type: 'object'
-    }
-  }),
+    required: ['project', 'index', 'body'],
+    additionalProperties: false
+  },
   publicKey: {
     type: 'string',
     pattern: '^[a-f0-9]{64}$'
