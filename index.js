@@ -1,24 +1,18 @@
 var encryptedJSONProtocol = require('encrypted-json-protocol')
-var verifySignature = require('./verify-signature')
+var sodium = require('sodium-universal')
 var strictObjectSchema = require('strict-json-object-schema')
+var verifySignature = require('./verify-signature')
+
+var GENERICHASH_BYTES = sodium.crypto_generichash_BYTES
+var SIGN_BYTES = sodium.crypto_sign_BYTES
+var SIGN_PUBLICKEYBYTES = sodium.crypto_sign_PUBLICKEYBYTES
 
 var logEntrySchema = strictObjectSchema({
-  publicKey: {
-    type: 'string',
-    pattern: '^[a-f0-9]{64}$'
-  },
-  index: {
-    type: 'number',
-    multipleOf: 1,
-    minimum: 0
-  }
+  publicKey: hexString(SIGN_PUBLICKEYBYTES),
+  index: {type: 'integer', minimum: 0}
 })
 
-var project = {
-  title: 'project discovery key',
-  type: 'string',
-  pattern: '^[a-f0-9]{64}$'
-}
+var project = hexString(GENERICHASH_BYTES)
 
 var body = {
   title: 'log entry payload',
@@ -27,44 +21,30 @@ var body = {
 
 var firstEntry = strictObjectSchema({
   project: project,
-  index: {
-    type: 'number',
-    const: 0
-  },
+  index: {const: 0},
   body: body
 })
 
 var laterEntry = strictObjectSchema({
   project: project,
-  index: {
-    title: 'log entry index',
-    type: 'integer',
-    minimum: 0
-  },
-  prior: {
-    title: 'digest of prior entry',
-    comment: 'optional',
-    type: 'string',
-    pattern: '^[a-f0-9]{64}$'
-  },
+  index: {type: 'integer', minimum: 1},
+  prior: hexString(GENERICHASH_BYTES),
   body: body
 })
 
 var envelopeSchema = strictObjectSchema({
   message: {oneOf: [firstEntry, laterEntry]},
-  publicKey: {
-    type: 'string',
-    pattern: '^[a-f0-9]{64}$'
-  },
-  signature: {
-    type: 'string',
-    pattern: '^[a-f0-9]{128}$'
-  },
-  authorization: {
-    type: 'string',
-    pattern: '^[a-f0-9]{128}$'
-  }
+  publicKey: hexString(SIGN_PUBLICKEYBYTES),
+  signature: hexString(SIGN_BYTES),
+  authorization: hexString(SIGN_BYTES)
 })
+
+function hexString (bytes) {
+  return {
+    type: 'string',
+    pattern: '^[a-f0-9]{' + (bytes * 2) + '}$'
+  }
+}
 
 module.exports = {
   Replication: encryptedJSONProtocol({
