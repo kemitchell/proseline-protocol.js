@@ -1,7 +1,7 @@
-var encryptedJSONProtocol = require('encrypted-json-protocol')
+var JSONProtocol = require('json-protocol')
 var sodium = require('sodium-universal')
 var strictObjectSchema = require('strict-json-object-schema')
-var verifySignature = require('./verify-signature')
+var stringify = require('fast-json-stable-stringify')
 
 var GENERICHASH_BYTES = sodium.crypto_generichash_BYTES
 var SIGN_BYTES = sodium.crypto_sign_BYTES
@@ -137,8 +137,11 @@ var reference = strictObjectSchema({
   index: {type: 'integer', minimum: 0}
 })
 
-module.exports = encryptedJSONProtocol({
+module.exports = JSONProtocol({
   version: 2,
+  sign: false,
+  requiredSigningKeys: true,
+  encrypt: true,
   messages: {
     // Offer messages indicate that a peer can send a
     // particular log entry for replication.
@@ -151,7 +154,23 @@ module.exports = encryptedJSONProtocol({
     // Peers send envelope messages in response to requests.
     envelope: {
       schema: envelope,
-      verify: verifySignature
+      verify: function (envelope) {
+        var stream = this
+        var messageBuffer = Buffer.from(stringify(envelope.message))
+        var validSignature = sodium.crypto_sign_verify_detached(
+          Buffer.from(envelope.signature, 'hex'),
+          messageBuffer,
+          Buffer.from(envelope.publicKey, 'hex')
+        )
+        if (!validSignature) return false
+        var validAuthorization = sodium.crypto_sign_verify_detached(
+          Buffer.from(envelope.authorization, 'hex'),
+          messageBuffer,
+          stream.publicKey
+        )
+        if (!validAuthorization) return false
+        return true
+      }
     }
   }
 })

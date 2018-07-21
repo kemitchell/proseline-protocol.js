@@ -11,7 +11,7 @@ var intro = {
 }
 
 tape('send and receive invitation', function (test) {
-  var replicationKey = makeReplicationKey()
+  var encryptionKey = makeEncryptionKey()
   var writeSeed = makeSeed()
 
   var alice = new protocol.Invitation()
@@ -22,7 +22,7 @@ tape('send and receive invitation', function (test) {
   var keyPair = makeKeyPair()
   var invitation = {
     message: {
-      replicationKey: replicationKey.toString('hex'),
+      replicationKey: encryptionKey.toString('hex'),
       writeSeed: writeSeed.toString('hex'),
       title: 'test project'
     },
@@ -47,12 +47,12 @@ tape('send and receive invitation', function (test) {
 })
 
 tape('invitation without seed', function (test) {
-  var replicationKey = makeReplicationKey()
+  var encryptionKey = makeEncryptionKey()
   var stream = new protocol.Invitation()
   var keyPair = makeKeyPair()
   var invitation = {
     message: {
-      replicationKey: replicationKey.toString('hex'),
+      replicationKey: encryptionKey.toString('hex'),
       title: 'test project'
     },
     publicKey: keyPair.publicKey.toString('hex')
@@ -95,9 +95,9 @@ tape('send and receive request', function (test) {
 })
 
 tape('send and receive offer', function (test) {
-  var replicationKey = makeReplicationKey()
-  var alice = protocol.Replication({replicationKey})
-  var bob = protocol.Replication({replicationKey})
+  var encryptionKey = makeEncryptionKey()
+  var alice = protocol.Replication({encryptionKey})
+  var bob = protocol.Replication({encryptionKey})
   alice.pipe(bob).pipe(alice)
   alice.handshake(function (error) {
     test.ifError(error, 'no a.handshake error')
@@ -116,8 +116,8 @@ tape('send and receive offer', function (test) {
 })
 
 tape('send offer for envelope', function (test) {
-  var replicationKey = makeReplicationKey()
-  var discoveryKey = makeDiscoveryKey(replicationKey)
+  var encryptionKey = makeEncryptionKey()
+  var discoveryKey = makeDiscoveryKey(encryptionKey)
 
   var writeSeed = makeSeed()
 
@@ -129,9 +129,9 @@ tape('send offer for envelope', function (test) {
     writeKeyPair.publicKey, writeKeyPair.secretKey, writeSeed
   )
 
-  var alice = protocol.Replication({replicationKey})
+  var alice = protocol.Replication({encryptionKey, publicKey: writeKeyPair.publicKey, secretKey: writeKeyPair.secretKey})
   var aliceKeyPair = makeKeyPair()
-  var bob = protocol.Replication({replicationKey})
+  var bob = protocol.Replication({encryptionKey, publicKey: writeKeyPair.publicKey, secretKey: writeKeyPair.secretKey})
 
   alice.handshake(function (error) {
     test.ifError(error, 'alice sent handshake')
@@ -182,8 +182,8 @@ tape('send offer for envelope', function (test) {
 })
 
 tape('entry links', function (test) {
-  var replicationKey = makeReplicationKey()
-  var discoveryKey = makeDiscoveryKey(replicationKey)
+  var encryptionKey = makeEncryptionKey()
+  var discoveryKey = makeDiscoveryKey(encryptionKey)
 
   var projectSeed = Buffer.alloc(sodium.crypto_sign_SEEDBYTES)
   sodium.randombytes_buf(projectSeed)
@@ -195,7 +195,7 @@ tape('entry links', function (test) {
     projectKeyPair.publicKey, projectKeyPair.secretKey, projectSeed
   )
 
-  var alice = protocol.Replication({replicationKey})
+  var alice = protocol.Replication({encryptionKey, publicKey: projectKeyPair.publicKey, secretKey: projectKeyPair.secretKey})
   var logKeyPair = makeKeyPair()
 
   alice.handshake(function (error) {
@@ -261,15 +261,15 @@ function sign (object, keyPair, key) {
   object[key] = signature.toString('hex')
 }
 
-function makeReplicationKey () {
-  var replicationKey = Buffer.alloc(sodium.crypto_stream_KEYBYTES)
-  sodium.randombytes_buf(replicationKey)
-  return replicationKey
+function makeEncryptionKey () {
+  var encryptionKey = Buffer.alloc(sodium.crypto_stream_KEYBYTES)
+  sodium.randombytes_buf(encryptionKey)
+  return encryptionKey
 }
 
-function makeDiscoveryKey (replicationKey) {
+function makeDiscoveryKey (encryptionKey) {
   var discoveryKey = Buffer.alloc(sodium.crypto_generichash_BYTES)
-  sodium.crypto_generichash(discoveryKey, replicationKey)
+  sodium.crypto_generichash(discoveryKey, encryptionKey)
   return discoveryKey
 }
 
