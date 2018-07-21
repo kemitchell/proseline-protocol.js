@@ -7,17 +7,19 @@ var GENERICHASH_BYTES = sodium.crypto_generichash_BYTES
 var SIGN_BYTES = sodium.crypto_sign_BYTES
 var SIGN_PUBLICKEYBYTES = sodium.crypto_sign_PUBLICKEYBYTES
 
-var logEntrySchema = strictObjectSchema({
-  publicKey: hexString(SIGN_PUBLICKEYBYTES),
-  index: {type: 'integer', minimum: 0}
-})
-
 var project = hexString(GENERICHASH_BYTES)
+var publicKey = hexString(SIGN_PUBLICKEYBYTES)
+var signature = hexString(SIGN_BYTES)
 
 var body = {
   title: 'log entry payload',
   type: 'object'
 }
+
+var logEntrySchema = strictObjectSchema({
+  publicKey: publicKey,
+  index: {type: 'integer', minimum: 0}
+})
 
 var firstEntry = strictObjectSchema({
   project: project,
@@ -34,9 +36,9 @@ var laterEntry = strictObjectSchema({
 
 var envelopeSchema = strictObjectSchema({
   message: {oneOf: [firstEntry, laterEntry]},
-  publicKey: hexString(SIGN_PUBLICKEYBYTES),
-  signature: hexString(SIGN_BYTES),
-  authorization: hexString(SIGN_BYTES)
+  publicKey: publicKey,
+  signature: signature,
+  authorization: signature
 })
 
 function hexString (bytes) {
