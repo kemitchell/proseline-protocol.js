@@ -6,9 +6,9 @@ Node.js stream implementations of the proseline.com peer-to-peer protocols
 
 This package implements two protocols:
 
-1. The _replication_ protocol enables Proseline peers to exchange data about project logs.
+1.  The _replication_ protocol enables Proseline peers to exchange data about project logs.
 
-2. The _invitation_ protocol enables Proseline peers to exchange invitations to projects.
+2.  The _invitation_ protocol enables Proseline peers to exchange invitations to projects.
 
 ## Licensing
 

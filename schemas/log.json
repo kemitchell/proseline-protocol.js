@@ -11,9 +11,6 @@
       "minimum": 0
     }
   },
-  "required": [
-    "publicKey",
-    "index"
-  ],
+  "required": ["publicKey", "index"],
   "additionalProperties": false
 }

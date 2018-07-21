@@ -5,10 +5,10 @@ var strictObjectSchema = require('strict-json-object-schema')
 var request = strictObjectSchema({
   message: strictObjectSchema({
     email: {type: 'string', format: 'email'},
-    date: {type: 'string', format: 'date-time'}
+    date: {type: 'string', format: 'date-time'},
   }),
   publicKey: common.publicKey,
-  signature: common.signature
+  signature: common.signature,
 })
 
 var invitation = strictObjectSchema({
@@ -17,13 +17,13 @@ var invitation = strictObjectSchema({
     properties: {
       replicationKey: common.hexString(32),
       writeSeed: common.hexString(32),
-      title: {type: 'string', minLength: 1}
+      title: {type: 'string', minLength: 1},
     },
     required: ['replicationKey'],
-    additionalProperties: false
+    additionalProperties: false,
   },
   publicKey: common.publicKey,
-  signature: common.signature
+  signature: common.signature,
 })
 
 module.exports = JSONProtocol({
@@ -32,6 +32,6 @@ module.exports = JSONProtocol({
   encrypt: false,
   messages: {
     invitation: {schema: invitation},
-    request: {schema: request}
-  }
+    request: {schema: request},
+  },
 })

@@ -20,11 +20,7 @@
           "type": "object"
         }
       },
-      "required": [
-        "project",
-        "index",
-        "body"
-      ],
+      "required": ["project", "index", "body"],
       "additionalProperties": false
     },
     "publicKey": {
@@ -36,10 +32,6 @@
       "pattern": "^[a-f0-9]{128}$"
     }
   },
-  "required": [
-    "message",
-    "publicKey",
-    "signature"
-  ],
+  "required": ["message", "publicKey", "signature"],
   "additionalProperties": false
 }

@@ -15,7 +15,10 @@
     "through2": "^2.0.3"
   },
   "devDependencies": {
+    "husky": "^0.14.3",
     "licensee": "^4.5.0",
+    "lint-staged": "^7.2.0",
+    "prettier": "^1.13.7",
     "standard": "^11.0.1",
     "standard-markdown": "^4.0.2",
     "tape": "^4.9.1"
@@ -30,6 +33,14 @@
   "scripts": {
     "licenses": "licensee --errors-only",
     "lint": "standard && standard-markdown",
+    "precommit": "lint-staged",
+    "format": "prettier --write '**/*.{js,json,md}'",
     "test": "node test.js"
+  },
+  "lint-staged": {
+    "*.{js,json,md}": [
+      "prettier --write",
+      "git add"
+    ]
   }
 }

@@ -13,9 +13,6 @@
       "pattern": "^[a-f0-9]{48}$"
     }
   },
-  "required": [
-    "version",
-    "nonce"
-  ],
+  "required": ["version", "nonce"],
   "additionalProperties": false
 }

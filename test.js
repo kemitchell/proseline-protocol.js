@@ -7,10 +7,10 @@ var intro = {
   type: 'intro',
   name: 'alice',
   device: 'laptop',
-  timestamp: new Date().toISOString()
+  timestamp: new Date().toISOString(),
 }
 
-tape('send and receive invitation', function (test) {
+tape('send and receive invitation', function(test) {
   var encryptionKey = makeEncryptionKey()
   var writeSeed = makeSeed()
 
@@ -24,49 +24,49 @@ tape('send and receive invitation', function (test) {
     message: {
       replicationKey: encryptionKey.toString('hex'),
       writeSeed: writeSeed.toString('hex'),
-      title: 'test project'
+      title: 'test project',
     },
-    publicKey: keyPair.publicKey.toString('hex')
+    publicKey: keyPair.publicKey.toString('hex'),
   }
   sign(invitation, keyPair)
-  alice.once('handshake', function () {
-    alice.invitation(invitation, function (error) {
+  alice.once('handshake', function() {
+    alice.invitation(invitation, function(error) {
       test.ifError(error, 'no a.invitation error')
     })
   })
-  bob.once('invitation', function (received) {
+  bob.once('invitation', function(received) {
     test.deepEqual(received, invitation, 'receives invitation')
     test.end()
   })
-  alice.handshake(function (error) {
+  alice.handshake(function(error) {
     test.ifError(error, 'no a.handshake error')
   })
-  bob.handshake(function (error) {
+  bob.handshake(function(error) {
     test.ifError(error, 'no a.handshake error')
   })
 })
 
-tape('invitation without seed', function (test) {
+tape('invitation without seed', function(test) {
   var encryptionKey = makeEncryptionKey()
   var stream = new protocol.Invitation()
   var keyPair = makeKeyPair()
   var invitation = {
     message: {
       replicationKey: encryptionKey.toString('hex'),
-      title: 'test project'
+      title: 'test project',
     },
-    publicKey: keyPair.publicKey.toString('hex')
+    publicKey: keyPair.publicKey.toString('hex'),
   }
   sign(invitation, keyPair)
-  stream.handshake(function () {
-    test.doesNotThrow(function () {
-      stream.invitation(invitation, function () { })
+  stream.handshake(function() {
+    test.doesNotThrow(function() {
+      stream.invitation(invitation, function() {})
     }, 'valid invitation')
     test.end()
   })
 })
 
-tape('send and receive request', function (test) {
+tape('send and receive request', function(test) {
   var alice = new protocol.Invitation()
   var bob = new protocol.Invitation()
   alice.pipe(bob).pipe(alice)
@@ -74,49 +74,57 @@ tape('send and receive request', function (test) {
   var request = {
     message: {
       email: 'test@example.com',
-      date: new Date().toISOString()
+      date: new Date().toISOString(),
     },
-    publicKey: keyPair.publicKey.toString('hex')
+    publicKey: keyPair.publicKey.toString('hex'),
   }
   sign(request, keyPair)
-  alice.handshake(function (error) {
+  alice.handshake(function(error) {
     test.ifError(error, 'no alice handshake error')
-    bob.handshake(function (error) {
+    bob.handshake(function(error) {
       test.ifError(error, 'no bob handshake error')
-      bob.once('request', function (received) {
+      bob.once('request', function(received) {
         test.deepEqual(received, request, 'bob received request')
         test.end()
       })
-      alice.request(request, function (error) {
+      alice.request(request, function(error) {
         test.ifError(error, 'no alice request error')
       })
     })
   })
 })
 
-tape('send and receive offer', function (test) {
+tape('send and receive offer', function(test) {
   var encryptionKey = makeEncryptionKey()
   var projectKeyPair = makeKeyPair()
-  var alice = protocol.Replication({encryptionKey, publicKey: projectKeyPair.publicKey, secretKey: projectKeyPair.secretKey})
-  var bob = protocol.Replication({encryptionKey, publicKey: projectKeyPair.publicKey, secretKey: projectKeyPair.secretKey})
+  var alice = protocol.Replication({
+    encryptionKey,
+    publicKey: projectKeyPair.publicKey,
+    secretKey: projectKeyPair.secretKey,
+  })
+  var bob = protocol.Replication({
+    encryptionKey,
+    publicKey: projectKeyPair.publicKey,
+    secretKey: projectKeyPair.secretKey,
+  })
   alice.pipe(bob).pipe(alice)
-  alice.handshake(function (error) {
+  alice.handshake(function(error) {
     test.ifError(error, 'no a.handshake error')
-    bob.handshake(function (error) {
+    bob.handshake(function(error) {
       test.ifError(error, 'no b.handshake error')
       var offer = {publicKey: 'a'.repeat(64), index: 10}
-      bob.once('offer', function (received) {
+      bob.once('offer', function(received) {
         test.deepEqual(received, offer, 'bob received offer')
         test.end()
       })
-      alice.offer(offer, function (error) {
+      alice.offer(offer, function(error) {
         test.ifError(error, 'no alice offer error')
       })
     })
   })
 })
 
-tape('send offer for envelope', function (test) {
+tape('send offer for envelope', function(test) {
   var encryptionKey = makeEncryptionKey()
   var discoveryKey = makeDiscoveryKey(encryptionKey)
 
@@ -124,56 +132,67 @@ tape('send offer for envelope', function (test) {
 
   var writeKeyPair = {
     publicKey: Buffer.alloc(sodium.crypto_sign_PUBLICKEYBYTES),
-    secretKey: Buffer.alloc(sodium.crypto_sign_SECRETKEYBYTES)
+    secretKey: Buffer.alloc(sodium.crypto_sign_SECRETKEYBYTES),
   }
   sodium.crypto_sign_seed_keypair(
-    writeKeyPair.publicKey, writeKeyPair.secretKey, writeSeed
+    writeKeyPair.publicKey,
+    writeKeyPair.secretKey,
+    writeSeed
   )
 
-  var alice = protocol.Replication({encryptionKey, publicKey: writeKeyPair.publicKey, secretKey: writeKeyPair.secretKey})
+  var alice = protocol.Replication({
+    encryptionKey,
+    publicKey: writeKeyPair.publicKey,
+    secretKey: writeKeyPair.secretKey,
+  })
   var aliceKeyPair = makeKeyPair()
-  var bob = protocol.Replication({encryptionKey, publicKey: writeKeyPair.publicKey, secretKey: writeKeyPair.secretKey})
+  var bob = protocol.Replication({
+    encryptionKey,
+    publicKey: writeKeyPair.publicKey,
+    secretKey: writeKeyPair.secretKey,
+  })
 
-  alice.handshake(function (error) {
+  alice.handshake(function(error) {
     test.ifError(error, 'alice sent handshake')
   })
 
-  bob.handshake(function (error) {
+  bob.handshake(function(error) {
     test.ifError(error, 'bob sent handshake')
   })
 
-  alice.once('request', function (request) {
+  alice.once('request', function(request) {
     test.equal(
-      request.publicKey, aliceKeyPair.publicKey.toString('hex'),
+      request.publicKey,
+      aliceKeyPair.publicKey.toString('hex'),
       'alice received request for alice log'
     )
-    test.equal(
-      request.index, 0,
-      'alice received request for entry 0'
-    )
+    test.equal(request.index, 0, 'alice received request for entry 0')
     var envelope = {
       message: {
         project: discoveryKey.toString('hex'),
         index: 0,
-        body: intro
+        body: intro,
       },
-      publicKey: aliceKeyPair.publicKey.toString('hex')
+      publicKey: aliceKeyPair.publicKey.toString('hex'),
     }
     sign(envelope, aliceKeyPair)
     sign(envelope, writeKeyPair, 'authorization')
-    alice.envelope(envelope, function (error) {
+    alice.envelope(envelope, function(error) {
       test.ifError(error, 'alice sent envelope')
     })
   })
 
-  bob.once('handshake', function () {
-    bob.request({
-      publicKey: aliceKeyPair.publicKey.toString('hex'),
-      index: 0
-    }, function (error) {
-      test.ifError(error, 'bob sent request')
-    })
-    bob.once('envelope', function (envelope) {
+  bob.once('handshake', function() {
+    bob.request(
+      {
+        publicKey: aliceKeyPair.publicKey.toString('hex'),
+        index: 0,
+      },
+      function(error) {
+        test.ifError(error, 'bob sent request')
+      }
+    )
+    bob.once('envelope', function(envelope) {
       test.pass('bob received envelope')
       test.end()
     })
@@ -182,7 +201,7 @@ tape('send offer for envelope', function (test) {
   alice.pipe(bob).pipe(alice)
 })
 
-tape('entry links', function (test) {
+tape('entry links', function(test) {
   var encryptionKey = makeEncryptionKey()
   var discoveryKey = makeDiscoveryKey(encryptionKey)
 
@@ -190,54 +209,68 @@ tape('entry links', function (test) {
   sodium.randombytes_buf(projectSeed)
   var projectKeyPair = {
     publicKey: Buffer.alloc(sodium.crypto_sign_PUBLICKEYBYTES),
-    secretKey: Buffer.alloc(sodium.crypto_sign_SECRETKEYBYTES)
+    secretKey: Buffer.alloc(sodium.crypto_sign_SECRETKEYBYTES),
   }
   sodium.crypto_sign_seed_keypair(
-    projectKeyPair.publicKey, projectKeyPair.secretKey, projectSeed
+    projectKeyPair.publicKey,
+    projectKeyPair.secretKey,
+    projectSeed
   )
 
-  var alice = protocol.Replication({encryptionKey, publicKey: projectKeyPair.publicKey, secretKey: projectKeyPair.secretKey})
+  var alice = protocol.Replication({
+    encryptionKey,
+    publicKey: projectKeyPair.publicKey,
+    secretKey: projectKeyPair.secretKey,
+  })
   var logKeyPair = makeKeyPair()
 
-  alice.handshake(function (error) {
+  alice.handshake(function(error) {
     test.ifError(error, 'alice sent handshake')
     var validFirstEnvelope = makeEnvelope({
       project: discoveryKey.toString('hex'),
       index: 0,
-      body: intro
+      body: intro,
     })
-    test.doesNotThrow(function () {
-      alice.envelope(validFirstEnvelope, function () { })
+    test.doesNotThrow(function() {
+      alice.envelope(validFirstEnvelope, function() {})
     }, 'index: 0, prior: none valid')
     var invalidSecondEnvelope = makeEnvelope({
       project: discoveryKey.toString('hex'),
       index: 1,
-      body: intro
+      body: intro,
     })
-    test.throws(function () {
-      alice.envelope(invalidSecondEnvelope, function () { })
-    }, /invalid envelope/, 'index: 1, prior: none invalid')
+    test.throws(
+      function() {
+        alice.envelope(invalidSecondEnvelope, function() {})
+      },
+      /invalid envelope/,
+      'index: 1, prior: none invalid'
+    )
     var digest = Buffer.alloc(sodium.crypto_generichash_BYTES)
-    sodium.crypto_generichash(digest, Buffer.from(
-      JSON.stringify(validFirstEnvelope.message),
-      'utf8'
-    ))
+    sodium.crypto_generichash(
+      digest,
+      Buffer.from(JSON.stringify(validFirstEnvelope.message), 'utf8')
+    )
     var validSecondEnvelope = makeEnvelope({
       project: discoveryKey.toString('hex'),
       index: 1,
       prior: digest.toString('hex'),
-      body: intro
+      body: intro,
     })
-    test.doesNotThrow(function () {
-      alice.envelope(validSecondEnvelope, function () { })
-    }, /invalid envelope/, 'index: 1, prior: digest valid')
+    test.doesNotThrow(
+      function() {
+        alice.envelope(validSecondEnvelope, function() {})
+      },
+      /invalid envelope/,
+      'index: 1, prior: digest valid'
+    )
     test.end()
   })
 
-  function makeEnvelope (message) {
+  function makeEnvelope(message) {
     var envelope = {
       message: message,
-      publicKey: logKeyPair.publicKey.toString('hex')
+      publicKey: logKeyPair.publicKey.toString('hex'),
     }
     sign(envelope, logKeyPair)
     sign(envelope, projectKeyPair, 'authorization')
@@ -245,13 +278,13 @@ tape('entry links', function (test) {
   }
 })
 
-function makeSeed () {
+function makeSeed() {
   var seed = Buffer.alloc(sodium.crypto_sign_SEEDBYTES)
   sodium.randombytes_buf(seed)
   return seed
 }
 
-function sign (object, keyPair, key) {
+function sign(object, keyPair, key) {
   key = key || 'signature'
   var signature = Buffer.alloc(sodium.crypto_sign_BYTES)
   sodium.crypto_sign_detached(
@@ -262,19 +295,19 @@ function sign (object, keyPair, key) {
   object[key] = signature.toString('hex')
 }
 
-function makeEncryptionKey () {
+function makeEncryptionKey() {
   var encryptionKey = Buffer.alloc(sodium.crypto_stream_KEYBYTES)
   sodium.randombytes_buf(encryptionKey)
   return encryptionKey
 }
 
-function makeDiscoveryKey (encryptionKey) {
+function makeDiscoveryKey(encryptionKey) {
   var discoveryKey = Buffer.alloc(sodium.crypto_generichash_BYTES)
   sodium.crypto_generichash(discoveryKey, encryptionKey)
   return discoveryKey
 }
 
-function makeKeyPair () {
+function makeKeyPair() {
   var publicKey = Buffer.alloc(sodium.crypto_sign_PUBLICKEYBYTES)
   var secretKey = Buffer.alloc(sodium.crypto_sign_SECRETKEYBYTES)
   sodium.crypto_sign_keypair(publicKey, secretKey)

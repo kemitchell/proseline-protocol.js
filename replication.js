@@ -26,10 +26,10 @@ var draft = strictObjectSchema({
     // Drafts reference parents by their digests.
     items: digest,
     maxItems: 2,
-    uniqueItems: true
+    uniqueItems: true,
   },
   text: {type: 'object'},
-  timestamp: timestamp
+  timestamp: timestamp,
 })
 
 // Marks record when a user moves a named marker onto a
@@ -42,11 +42,11 @@ var mark = strictObjectSchema({
   name: {
     type: 'string',
     minLength: 1,
-    maxLength: 256
+    maxLength: 256,
   },
   timestamp: timestamp,
   // Marks reference drafts by their digests.
-  draft: digest
+  draft: digest,
 })
 
 // Notes store comments to drafts, as well as replies to
@@ -59,10 +59,10 @@ var note = strictObjectSchema({
   // the note pertains.
   range: strictObjectSchema({
     start: {type: 'integer', minimum: 0},
-    end: {type: 'integer', minimum: 1}
+    end: {type: 'integer', minimum: 1},
   }),
   text: noteText,
-  timestamp: timestamp
+  timestamp: timestamp,
 })
 
 var reply = strictObjectSchema({
@@ -73,7 +73,7 @@ var reply = strictObjectSchema({
   // the draft.
   parent: digest,
   text: noteText,
-  timestamp: timestamp
+  timestamp: timestamp,
 })
 
 // Notes associates names and device, like "Kyle on laptop"
@@ -82,7 +82,7 @@ var intro = strictObjectSchema({
   type: {const: 'intro'},
   name: name,
   device: name,
-  timestamp: timestamp
+  timestamp: timestamp,
 })
 
 // A log entry body can be one of the types above.
@@ -93,7 +93,7 @@ var body = {oneOf: [draft, mark, intro, note, reply]}
 var firstEntry = strictObjectSchema({
   project: project,
   index: {const: 0},
-  body: body
+  body: body,
 })
 
 // Log entries after the first reference immediately prior
@@ -102,7 +102,7 @@ var laterEntry = strictObjectSchema({
   project: project,
   index: {type: 'integer', minimum: 1},
   prior: common.hexString(GENERICHASH_BYTES),
-  body: body
+  body: body,
 })
 
 // Envelopes wrap log entry messages with signatures.
@@ -113,7 +113,7 @@ var envelope = strictObjectSchema({
   // Signature with the secret key of the log.
   signature: common.signature,
   // Signature with the secret key of the project.
-  authorization: common.signature
+  authorization: common.signature,
 })
 
 // References
@@ -123,7 +123,7 @@ var envelope = strictObjectSchema({
 // and request log entries.
 var reference = strictObjectSchema({
   publicKey: common.publicKey,
-  index: {type: 'integer', minimum: 0}
+  index: {type: 'integer', minimum: 0},
 })
 
 module.exports = JSONProtocol({
@@ -143,7 +143,7 @@ module.exports = JSONProtocol({
     // Peers send envelope messages in response to requests.
     envelope: {
       schema: envelope,
-      verify: function (envelope) {
+      verify: function(envelope) {
         var stream = this
         var messageBuffer = Buffer.from(stringify(envelope.message))
         var validSignature = sodium.crypto_sign_verify_detached(
@@ -159,7 +159,7 @@ module.exports = JSONProtocol({
         )
         if (!validAuthorization) return false
         return true
-      }
-    }
-  }
+      },
+    },
+  },
 })
