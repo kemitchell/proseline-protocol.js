@@ -28,6 +28,12 @@ var envelopeSchema = strictObjectSchema({
         type: 'integer',
         minimum: 0
       },
+      prior: {
+        title: 'digest of prior entry',
+        comment: 'optional',
+        type: 'string',
+        pattern: '^[a-f0-9]{64}$'
+      },
       body: {
         title: 'log entry payload',
         type: 'object'
