@@ -4,15 +4,10 @@
   "version": "7.0.0",
   "author": "Kyle E. Mitchell <kyle@kemitchell.com> (https://kemitchell.com/)",
   "dependencies": {
-    "ajv": "^6.5.2",
-    "duplexify": "^3.6.0",
     "fast-json-stable-stringify": "^2.0.0",
-    "inherits": "^2.0.3",
     "json-protocol": "^2.0.2",
-    "length-prefixed-stream": "^1.6.0",
     "sodium-universal": "^2.0.0",
-    "strict-json-object-schema": "^1.0.1",
-    "through2": "^2.0.3"
+    "strict-json-object-schema": "^1.0.1"
   },
   "devDependencies": {
     "eslint": "^5.2.0",
