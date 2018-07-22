@@ -98,12 +98,12 @@ tape('send and receive offer', function(test) {
   var encryptionKey = makeEncryptionKey()
   var projectKeyPair = makeKeyPair()
   var alice = protocol.Replication({
-    encryptionKey,
+    encryptionKey: encryptionKey,
     publicKey: projectKeyPair.publicKey,
     secretKey: projectKeyPair.secretKey,
   })
   var bob = protocol.Replication({
-    encryptionKey,
+    encryptionKey: encryptionKey,
     publicKey: projectKeyPair.publicKey,
     secretKey: projectKeyPair.secretKey,
   })
@@ -141,13 +141,13 @@ tape('send offer for envelope', function(test) {
   )
 
   var alice = protocol.Replication({
-    encryptionKey,
+    encryptionKey: encryptionKey,
     publicKey: writeKeyPair.publicKey,
     secretKey: writeKeyPair.secretKey,
   })
   var aliceKeyPair = makeKeyPair()
   var bob = protocol.Replication({
-    encryptionKey,
+    encryptionKey: encryptionKey,
     publicKey: writeKeyPair.publicKey,
     secretKey: writeKeyPair.secretKey,
   })
@@ -218,7 +218,7 @@ tape('entry links', function(test) {
   )
 
   var alice = protocol.Replication({
-    encryptionKey,
+    encryptionKey: encryptionKey,
     publicKey: projectKeyPair.publicKey,
     secretKey: projectKeyPair.secretKey,
   })
@@ -311,5 +311,5 @@ function makeKeyPair() {
   var publicKey = Buffer.alloc(sodium.crypto_sign_PUBLICKEYBYTES)
   var secretKey = Buffer.alloc(sodium.crypto_sign_SECRETKEYBYTES)
   sodium.crypto_sign_keypair(publicKey, secretKey)
-  return {publicKey, secretKey}
+  return {publicKey: publicKey, secretKey: secretKey}
 }

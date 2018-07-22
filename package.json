@@ -15,6 +15,8 @@
     "through2": "^2.0.3"
   },
   "devDependencies": {
+    "eslint": "^5.2.0",
+    "eslint-config-prettier": "^2.9.0",
     "husky": "^0.14.3",
     "licensee": "^4.5.0",
     "lint-staged": "^7.2.0",
@@ -30,12 +32,18 @@
   "repository": "proseline/proseline-protocol.js",
   "scripts": {
     "licenses": "licensee --errors-only",
+    "lint": "eslint '**/*.js'",
     "precommit": "lint-staged",
     "format": "prettier --write '**/*.{js,json,md}'",
     "test": "node test.js"
   },
   "lint-staged": {
-    "*.{js,json,md}": [
+    "*.js": [
+      "prettier --write",
+      "eslint",
+      "git add"
+    ],
+    "*.{json,md}": [
       "prettier --write",
       "git add"
     ]
