@@ -14,8 +14,8 @@ tape('send and receive invitation', function(test) {
   var encryptionKey = makeEncryptionKey()
   var writeSeed = makeSeed()
 
-  var alice = new protocol.Invitation({})
-  var bob = new protocol.Invitation({})
+  var alice = new protocol.Invitation()
+  var bob = new protocol.Invitation()
 
   alice.pipe(bob).pipe(alice)
 
