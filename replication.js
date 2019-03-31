@@ -10,15 +10,15 @@ var GENERICHASH_BYTES = sodium.crypto_generichash_BYTES
 
 var project = common.hexString(GENERICHASH_BYTES)
 var digest = common.hexString(GENERICHASH_BYTES)
-var timestamp = {type: 'string', format: 'date-time'}
-var name = {type: 'string', minLength: 1, maxLength: 256}
-var noteText = {type: 'string', minLength: 1}
+var timestamp = { type: 'string', format: 'date-time' }
+var name = { type: 'string', minLength: 1, maxLength: 256 }
+var noteText = { type: 'string', minLength: 1 }
 
 // Log Entry Types
 
 // Drafts store the contents of a written draft.
 var draft = strictObjectSchema({
-  type: {const: 'draft'},
+  type: { const: 'draft' },
   // A draft can be based on up to two parents:
   // other drafts on which the new draft was based.
   parents: {
@@ -26,94 +26,94 @@ var draft = strictObjectSchema({
     // Drafts reference parents by their digests.
     items: digest,
     maxItems: 2,
-    uniqueItems: true,
+    uniqueItems: true
   },
-  text: {type: 'object'},
-  timestamp: timestamp,
+  text: { type: 'object' },
+  timestamp: timestamp
 })
 
 // Marks record when a user moves a named marker onto a
 // specific draft.
 var mark = strictObjectSchema({
-  type: {const: 'mark'},
+  type: { const: 'mark' },
   // Each identifier has a unique identifier. User may
   // change the names of identifiers over time.
   identifier: common.hexString(4),
   name: {
     type: 'string',
     minLength: 1,
-    maxLength: 256,
+    maxLength: 256
   },
   timestamp: timestamp,
   // Marks reference drafts by their digests.
-  draft: digest,
+  draft: digest
 })
 
 // Notes store comments to drafts, as well as replies to
 // other notes.  This schema represents a note to a draft.
 var note = strictObjectSchema({
-  type: {const: 'note'},
+  type: { const: 'note' },
   // Notes reference drafts by their digests.
   draft: digest,
   // The cursor position of the range of the draft to which
   // the note pertains.
   range: strictObjectSchema({
-    start: {type: 'integer', minimum: 0},
-    end: {type: 'integer', minimum: 1},
+    start: { type: 'integer', minimum: 0 },
+    end: { type: 'integer', minimum: 1 }
   }),
   text: noteText,
-  timestamp: timestamp,
+  timestamp: timestamp
 })
 
 var reply = strictObjectSchema({
-  type: {const: 'note'},
+  type: { const: 'note' },
   draft: digest,
   // Unlike notes to draft, reply notes reference their
   // parent notes by digest, and do not specify ranges with
   // the draft.
   parent: digest,
   text: noteText,
-  timestamp: timestamp,
+  timestamp: timestamp
 })
 
 // Notes associates names and device, like "Kyle on laptop"
 // with logs.
 var intro = strictObjectSchema({
-  type: {const: 'intro'},
+  type: { const: 'intro' },
   name: name,
   device: name,
-  timestamp: timestamp,
+  timestamp: timestamp
 })
 
 // A log entry body can be one of the types above.
-var body = {oneOf: [draft, mark, intro, note, reply]}
+var body = { oneOf: [draft, mark, intro, note, reply] }
 
 // The first entry in a log does not reference any
 // prior entry.
 var firstEntry = strictObjectSchema({
   project: project,
-  index: {const: 0},
-  body: body,
+  index: { const: 0 },
+  body: body
 })
 
 // Log entries after the first reference immediately prior
 // log entries by their digests.
 var laterEntry = strictObjectSchema({
   project: project,
-  index: {type: 'integer', minimum: 1},
+  index: { type: 'integer', minimum: 1 },
   prior: common.hexString(GENERICHASH_BYTES),
-  body: body,
+  body: body
 })
 
 // Envelopes wrap log entry messages with signatures.
 var envelope = strictObjectSchema({
-  message: {oneOf: [firstEntry, laterEntry]},
+  message: { oneOf: [firstEntry, laterEntry] },
   // The public key of the log.
   publicKey: common.publicKey,
   // Signature with the secret key of the log.
   signature: common.signature,
   // Signature with the secret key of the project.
-  authorization: common.signature,
+  authorization: common.signature
 })
 
 // References
@@ -123,7 +123,7 @@ var envelope = strictObjectSchema({
 // and request log entries.
 var reference = strictObjectSchema({
   publicKey: common.publicKey,
-  index: {type: 'integer', minimum: 0},
+  index: { type: 'integer', minimum: 0 }
 })
 
 module.exports = JSONProtocol({
@@ -134,16 +134,16 @@ module.exports = JSONProtocol({
   messages: {
     // Offer messages indicate that a peer can send a
     // particular log entry for replication.
-    offer: {schema: reference},
+    offer: { schema: reference },
 
     // Request messages ask peers to send particular
     // log entries that they have offered.
-    request: {schema: reference},
+    request: { schema: reference },
 
     // Peers send envelope messages in response to requests.
     envelope: {
       schema: envelope,
-      verify: function(envelope) {
+      verify: function (envelope) {
         var stream = this
         var messageBuffer = Buffer.from(stringify(envelope.message))
         var validSignature = sodium.crypto_sign_verify_detached(
@@ -159,7 +159,7 @@ module.exports = JSONProtocol({
         )
         if (!validAuthorization) return false
         return true
-      },
-    },
-  },
+      }
+    }
+  }
 })
