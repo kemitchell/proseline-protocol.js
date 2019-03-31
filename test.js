@@ -12,7 +12,7 @@ var intro = {
 
 tape('send and receive invitation', function (test) {
   var encryptionKey = makeEncryptionKey()
-  var writeSeed = makeSeed()
+  var encryptedWriteSeed = makeSeed()
 
   var alice = new protocol.Invitation()
   var bob = new protocol.Invitation()
@@ -22,9 +22,9 @@ tape('send and receive invitation', function (test) {
   var keyPair = makeKeyPair()
   var invitation = {
     message: {
-      replicationKey: encryptionKey.toString('hex'),
-      writeSeed: writeSeed.toString('hex'),
-      title: 'test project'
+      encryptedReplicationKey: encryptionKey.toString('hex'),
+      encryptedWriteSeed: encryptedWriteSeed.toString('hex'),
+      encryptedTitle: 'test project'
     },
     publicKey: keyPair.publicKey.toString('hex')
   }
@@ -52,8 +52,8 @@ tape('invitation without seed', function (test) {
   var keyPair = makeKeyPair()
   var invitation = {
     message: {
-      replicationKey: encryptionKey.toString('hex'),
-      title: 'test project'
+      encryptedReplicationKey: encryptionKey.toString('hex'),
+      encryptedTitle: 'test project'
     },
     publicKey: keyPair.publicKey.toString('hex')
   }
@@ -128,7 +128,7 @@ tape('send offer for envelope', function (test) {
   var encryptionKey = makeEncryptionKey()
   var discoveryKey = makeDiscoveryKey(encryptionKey)
 
-  var writeSeed = makeSeed()
+  var encryptedWriteSeed = makeSeed()
 
   var writeKeyPair = {
     publicKey: Buffer.alloc(sodium.crypto_sign_PUBLICKEYBYTES),
@@ -137,7 +137,7 @@ tape('send offer for envelope', function (test) {
   sodium.crypto_sign_seed_keypair(
     writeKeyPair.publicKey,
     writeKeyPair.secretKey,
-    writeSeed
+    encryptedWriteSeed
   )
 
   var alice = protocol.Replication({

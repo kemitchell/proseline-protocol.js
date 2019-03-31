@@ -15,11 +15,11 @@ var invitation = strictObjectSchema({
   message: {
     type: 'object',
     properties: {
-      replicationKey: common.hexString(32),
-      writeSeed: common.hexString(32),
-      title: { type: 'string', minLength: 1 }
+      encryptedReplicationKey: common.hexString(32),
+      encryptedWriteSeed: common.hexString(32),
+      encryptedTitle: { type: 'string', minLength: 1 }
     },
-    required: ['replicationKey'],
+    required: ['encryptedReplicationKey'],
     additionalProperties: false
   },
   publicKey: common.publicKey,
@@ -27,7 +27,7 @@ var invitation = strictObjectSchema({
 })
 
 module.exports = JSONProtocol({
-  version: 2,
+  version: 3,
   sign: false,
   encrypt: false,
   messages: {
