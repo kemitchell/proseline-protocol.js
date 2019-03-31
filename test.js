@@ -12,19 +12,34 @@ var intro = {
 
 tape('send and receive invitation', function (test) {
   var encryptionKey = makeEncryptionKey()
-  var encryptedWriteSeed = makeSeed()
+  var keyPair = makeKeyPair()
+
+  var replicationKey = makeEncryptionKey()
+  var replicationKeyNonce = randomNonce()
+  var writeSeed = makeSeed()
+  var writeSeedNonce = randomNonce()
+  var title = 'test project'
+  var titleNonce = randomNonce()
 
   var alice = new protocol.Invitation()
   var bob = new protocol.Invitation()
 
   alice.pipe(bob).pipe(alice)
 
-  var keyPair = makeKeyPair()
   var invitation = {
     message: {
-      encryptedReplicationKey: encryptionKey.toString('hex'),
-      encryptedWriteSeed: encryptedWriteSeed.toString('hex'),
-      encryptedTitle: 'test project'
+      replicationKeyCiphertext: encrypt(
+        replicationKey, replicationKeyNonce, encryptionKey
+      ).toString('hex'),
+      replicationKeyNonce: replicationKeyNonce.toString('hex'),
+      writeSeedCiphertext: encrypt(
+        writeSeed, writeSeedNonce, encryptionKey
+      ).toString('hex'),
+      writeSeedNonce: writeSeedNonce.toString('hex'),
+      titleCiphertext: encrypt(
+        Buffer.from(title), titleNonce, encryptionKey
+      ).toString('hex'),
+      titleNonce: titleNonce.toString('hex')
     },
     publicKey: keyPair.publicKey.toString('hex')
   }
@@ -48,12 +63,25 @@ tape('send and receive invitation', function (test) {
 
 tape('invitation without seed', function (test) {
   var encryptionKey = makeEncryptionKey()
-  var stream = new protocol.Invitation()
   var keyPair = makeKeyPair()
+
+  var replicationKey = makeEncryptionKey()
+  var replicationKeyNonce = randomNonce()
+  var title = 'test project'
+  var titleNonce = randomNonce()
+
+  var stream = new protocol.Invitation()
+
   var invitation = {
     message: {
-      encryptedReplicationKey: encryptionKey.toString('hex'),
-      encryptedTitle: 'test project'
+      replicationKeyCiphertext: encrypt(
+        replicationKey, replicationKeyNonce, encryptionKey
+      ).toString('hex'),
+      replicationKeyNonce: replicationKeyNonce.toString('hex'),
+      titleCiphertext: encrypt(
+        Buffer.from(title), titleNonce, encryptionKey
+      ).toString('hex'),
+      titleNonce: titleNonce.toString('hex')
     },
     publicKey: keyPair.publicKey.toString('hex')
   }
@@ -295,6 +323,12 @@ function sign (object, keyPair, key) {
   object[key] = signature.toString('hex')
 }
 
+function randomNonce () {
+  var nonce = Buffer.alloc(sodium.crypto_secretbox_NONCEBYTES)
+  sodium.randombytes_buf(nonce)
+  return nonce
+}
+
 function makeEncryptionKey () {
   var encryptionKey = Buffer.alloc(sodium.crypto_stream_KEYBYTES)
   sodium.randombytes_buf(encryptionKey)
@@ -312,4 +346,14 @@ function makeKeyPair () {
   var secretKey = Buffer.alloc(sodium.crypto_sign_SECRETKEYBYTES)
   sodium.crypto_sign_keypair(publicKey, secretKey)
   return { publicKey: publicKey, secretKey: secretKey }
+}
+
+function encrypt (plaintext, nonce, key) {
+  var ciphertext = Buffer.alloc(
+    plaintext.length + sodium.crypto_secretbox_MACBYTES
+  )
+  sodium.crypto_secretbox_easy(
+    ciphertext, plaintext, nonce, key
+  )
+  return ciphertext
 }

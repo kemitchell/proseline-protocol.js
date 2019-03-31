@@ -11,8 +11,10 @@ exports.signature = hexString(SIGN_BYTES)
 
 // Schemas represent byte strings as hex strings.
 function hexString (bytes) {
-  return {
+  var returned = {
     type: 'string',
-    pattern: '^[a-f0-9]{' + bytes * 2 + '}$'
+    pattern: '^[a-f0-9]+$'
   }
+  if (bytes) returned.length = bytes
+  return returned
 }

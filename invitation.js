@@ -15,11 +15,17 @@ var invitation = strictObjectSchema({
   message: {
     type: 'object',
     properties: {
-      encryptedReplicationKey: common.hexString(32),
-      encryptedWriteSeed: common.hexString(32),
-      encryptedTitle: { type: 'string', minLength: 1 }
+      replicationKeyCiphertext: common.hexString(96),
+      replicationKeyNonce: common.hexString(48),
+      writeSeedCiphertext: common.hexString(96),
+      writeSeedNonce: common.hexString(48),
+      titleCiphertext: common.hexString(),
+      titleNonce: common.hexString(48)
     },
-    required: ['encryptedReplicationKey'],
+    required: [
+      'replicationKeyCiphertext',
+      'replicationKeyNonce'
+    ],
     additionalProperties: false
   },
   publicKey: common.publicKey,
