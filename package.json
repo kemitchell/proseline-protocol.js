@@ -13,7 +13,7 @@
     "eslint": "^5.2.0",
     "eslint-config-prettier": "^2.9.0",
     "husky": "^0.14.3",
-    "licensee": "^4.5.0",
+    "licensee": "^7.0.1",
     "lint-staged": "^7.2.0",
     "prettier": "^1.13.7",
     "tape": "^4.9.1"
