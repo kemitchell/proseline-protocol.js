@@ -27,11 +27,15 @@
   "scripts": {
     "licenses": "licensee --errors-only",
     "lint": "standard",
-    "precommit": "lint-staged",
     "format": "prettier --write '**/*.{js,json,md}'",
     "test": "node test.js"
   },
   "lint-staged": {
     "*.js": "standard"
+  },
+  "husky": {
+    "hooks": {
+      "pre-commit": "lint-staged"
+    }
   }
 }
