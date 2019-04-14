@@ -5,7 +5,7 @@
   "author": "Kyle E. Mitchell <kyle@kemitchell.com> (https://kemitchell.com/)",
   "dependencies": {
     "fast-json-stable-stringify": "^2.0.0",
-    "json-protocol": "^2.0.2",
+    "json-protocol": "^3.0.0",
     "sodium-universal": "^2.0.0",
     "strict-json-object-schema": "^1.0.1"
   },
